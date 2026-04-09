@@ -39,7 +39,7 @@ export default function Sidebar() {
 >
   <span className="absolute inset-0 -z-10 before:content-[''] before:absolute before:inset-0 before:bg-blue-500 before:opacity-80 before:blur-xl before:rounded-full before:w-full before:h-full before:animate-pulse">
   </span>
-  <span className="text-gray-900 drop-shadow-lg">Wind Consulting Tunisia</span>
+  <span className="text-gray-900 drop-shadow-lg">société plastique Teboulba</span>
 </Link>
 
 
@@ -90,16 +90,16 @@ export default function Sidebar() {
 
               <li className="items-center">
                 <Link
-                  className={linkClass("/admin/tablebl")}
-                  to="/admin/tablebl"
-                  onClick={() => handleSetActiveRoute("/admin/tablebl")}
+                  className={linkClass("/admin/factures")}
+                  to="/admin/factures"
+                  onClick={() => handleSetActiveRoute("/admin/factures")}
                 >
-                  <i className={`${iconClass("/admin/tablebl")} fa-table`}></i>{" "}
+                  <i className={`${iconClass("/admin/factures")} fa-file-invoice`}></i>{" "}
                   <span className="relative">
                     <span className="absolute inset-0 text-black opacity-30 blur-md -z-10">
-                      Gestion Bon Livraison
+                      Gestion Factures
                     </span>
-                    <span className="drop-shadow-lg">Gestion Bon Livraison</span>
+                    <span className="drop-shadow-lg">Gestion Factures</span>
                   </span>
                 </Link>
               </li>
@@ -120,7 +120,7 @@ export default function Sidebar() {
                 </Link>
               </li>
 
-              <li className="items-center">
+              {/* <li className="items-center">
                 <Link
                   className={linkClass("/admin/tableVM")}
                   to="/admin/tableVM"
@@ -134,7 +134,7 @@ export default function Sidebar() {
                     <span className="drop-shadow-lg">Gestion des VMS</span>
                   </span>
                 </Link>
-              </li>
+              </li> */}
 
               <li className="items-center">
                 <Link
