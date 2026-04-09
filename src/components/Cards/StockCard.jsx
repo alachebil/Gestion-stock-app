@@ -13,8 +13,8 @@ export default function StockCard() {
   const [loading, setLoading] = useState(true);
 
   // Forms
-  const [matiereForm, setMatiereForm] = useState({ nom: "", type: "Type 1", quantiteKg: "" });
-  const [semiPretForm, setSemiPretForm] = useState({ nom: "", type: "Type 1", quantiteKg: "", matiereSource: "" });
+  const [matiereForm, setMatiereForm] = useState({ nom: "", type: "base", quantiteKg: "" });
+  const [semiPretForm, setSemiPretForm] = useState({ nom: "", type: "base", quantiteKg: "", matiereSource: "" });
   const [finalForm, setFinalForm] = useState({ nom: "", quantiteKg: "", produitSemiPretSource: "" });
 
   // Transformation forms
@@ -59,7 +59,7 @@ export default function StockCard() {
   const handleAddMatiere = async (e) => {
     e.preventDefault();
     await axios.post(`${API}/matiere`, { ...matiereForm, quantiteKg: Number(matiereForm.quantiteKg) });
-    setMatiereForm({ nom: "", type: "Type 1", quantiteKg: "" });
+    setMatiereForm({ nom: "", type: "base", quantiteKg: "" });
     fetchAll();
   };
 
@@ -68,7 +68,7 @@ export default function StockCard() {
     const body = { ...semiPretForm, quantiteKg: Number(semiPretForm.quantiteKg) };
     if (!body.matiereSource) delete body.matiereSource;
     await axios.post(`${API}/semi-pret`, body);
-    setSemiPretForm({ nom: "", type: "Type 1", quantiteKg: "", matiereSource: "" });
+    setSemiPretForm({ nom: "", type: "base", quantiteKg: "", matiereSource: "" });
     fetchAll();
   };
 
@@ -331,7 +331,7 @@ export default function StockCard() {
             <form onSubmit={handleAddMatiere} className="flex flex-wrap gap-3 mb-6 items-end">
               <input className="border rounded px-3 py-2 text-sm" placeholder="Nom" required value={matiereForm.nom} onChange={(e) => setMatiereForm({ ...matiereForm, nom: e.target.value })} />
               <select className="border rounded px-3 py-2 text-sm" value={matiereForm.type} onChange={(e) => setMatiereForm({ ...matiereForm, type: e.target.value })}>
-                <option>Type 1</option><option>Type 2</option><option>Type 3</option>
+                <option>base</option><option>bargatere</option>
               </select>
               <input className="border rounded px-3 py-2 text-sm w-28" type="number" min="0" step="0.01" placeholder="Quantité (kg)" required value={matiereForm.quantiteKg} onChange={(e) => setMatiereForm({ ...matiereForm, quantiteKg: e.target.value })} />
               <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">Ajouter</button>
@@ -369,7 +369,7 @@ export default function StockCard() {
             <form onSubmit={handleAddSemiPret} className="flex flex-wrap gap-3 mb-6 items-end">
               <input className="border rounded px-3 py-2 text-sm" placeholder="Nom" required value={semiPretForm.nom} onChange={(e) => setSemiPretForm({ ...semiPretForm, nom: e.target.value })} />
               <select className="border rounded px-3 py-2 text-sm" value={semiPretForm.type} onChange={(e) => setSemiPretForm({ ...semiPretForm, type: e.target.value })}>
-                <option>Type 1</option><option>Type 2</option><option>Type 3</option>
+                <option>base</option><option>bargatere</option>
               </select>
               <input className="border rounded px-3 py-2 text-sm w-28" type="number" min="0" step="0.01" placeholder="Quantité (kg)" required value={semiPretForm.quantiteKg} onChange={(e) => setSemiPretForm({ ...semiPretForm, quantiteKg: e.target.value })} />
               <select className="border rounded px-3 py-2 text-sm" value={semiPretForm.matiereSource} onChange={(e) => setSemiPretForm({ ...semiPretForm, matiereSource: e.target.value })}>
@@ -493,8 +493,8 @@ export default function StockCard() {
               {editingItem.category !== "final" && (
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-1">Type</label>
-                  <select className="border rounded px-3 py-2 text-sm w-full" value={editForm.type || "Type 1"} onChange={(e) => setEditForm({ ...editForm, type: e.target.value })}>
-                    <option>Type 1</option><option>Type 2</option><option>Type 3</option>
+                  <select className="border rounded px-3 py-2 text-sm w-full" value={editForm.type || "base"} onChange={(e) => setEditForm({ ...editForm, type: e.target.value })}>
+                    <option>base</option><option>bargatere</option>
                   </select>
                 </div>
               )}
