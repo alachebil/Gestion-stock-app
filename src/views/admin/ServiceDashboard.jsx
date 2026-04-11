@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import axios from "axios";
 import { Chart } from "chart.js/auto";
 
-export default function Dashboard() {
+export default function ServiceDashboard() {
   const navigate = useNavigate();
   const user = useSelector((state) => state.user.currentUser);
   const chartRef = useRef(null);
@@ -20,23 +20,18 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchStockSummary = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/stock/summary");
-        const { matierePremieres, produitsSemiPrets, produitsFinals } = response.data;
+        const response = await axios.get("http://localhost:3000/service-stock/summary");
+        const { produitsSemiPrets, produitsFinals } = response.data;
 
-        const mpTotal = matierePremieres.reduce((sum, m) => sum + m.totalKg, 0);
         const spTotal = produitsSemiPrets.reduce((sum, s) => sum + s.totalKg, 0);
         const pfTotal = produitsFinals.reduce((sum, f) => sum + f.totalKg, 0);
 
-        const mpCount = matierePremieres.reduce((sum, m) => sum + m.count, 0);
         const spCount = produitsSemiPrets.reduce((sum, s) => sum + s.count, 0);
         const pfCount = produitsFinals.reduce((sum, f) => sum + f.count, 0);
 
-        renderChart(
-          [mpTotal, spTotal, pfTotal],
-          [mpCount, spCount, pfCount]
-        );
+        renderChart([spTotal, pfTotal], [spCount, pfCount]);
       } catch (error) {
-        console.error("Error fetching stock summary:", error);
+        console.error("Error fetching service stock summary:", error);
       }
     };
 
@@ -44,10 +39,10 @@ export default function Dashboard() {
 
     const fetchTransformations = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/stock/transformations");
+        const response = await axios.get("http://localhost:3000/service-stock/transformations");
         setTransformations(response.data);
       } catch (error) {
-        console.error("Error fetching transformations:", error);
+        console.error("Error fetching service transformations:", error);
       }
     };
     fetchTransformations();
@@ -61,16 +56,16 @@ export default function Dashboard() {
 
   const refreshTransformations = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/stock/transformations");
+      const response = await axios.get("http://localhost:3000/service-stock/transformations");
       setTransformations(response.data);
     } catch (error) {
-      console.error("Error fetching transformations:", error);
+      console.error("Error fetching service transformations:", error);
     }
   };
 
   const deleteTransformation = async (id) => {
     try {
-      await axios.delete(`http://localhost:3000/stock/transformations/${id}`);
+      await axios.delete(`http://localhost:3000/service-stock/transformations/${id}`);
       await refreshTransformations();
     } catch (error) {
       console.error("Error deleting transformation:", error);
@@ -88,24 +83,24 @@ export default function Dashboard() {
       chartRef.current.destroy();
     }
 
-    const ctx = document.getElementById("stockChart").getContext("2d");
+    const ctx = document.getElementById("serviceStockChart").getContext("2d");
     chartRef.current = new Chart(ctx, {
       type: "bar",
       data: {
-        labels: ["Matière Première", "Produit Semi-Prêt", "Produit Final"],
+        labels: ["Produit Semi-Prêt", "Produit Final"],
         datasets: [
           {
             label: "Quantité totale (kg)",
             data: totals,
-            backgroundColor: ["#3B82F6", "#F59E0B", "#10B981"],
-            borderColor: ["#2563EB", "#D97706", "#059669"],
+            backgroundColor: ["#9C27B0", "#E91E63"],
+            borderColor: ["#7B1FA2", "#C2185B"],
             borderWidth: 1,
           },
           {
             label: "Nombre de produits",
             data: counts,
-            backgroundColor: ["#93C5FD", "#FCD34D", "#6EE7B7"],
-            borderColor: ["#3B82F6", "#F59E0B", "#10B981"],
+            backgroundColor: ["#CE93D8", "#F48FB1"],
+            borderColor: ["#9C27B0", "#E91E63"],
             borderWidth: 1,
           },
         ],
@@ -118,7 +113,7 @@ export default function Dashboard() {
           },
           title: {
             display: true,
-            text: "État du Stock",
+            text: "État du Stock Service",
             color: "#fff",
             font: { size: 16 },
           },
@@ -133,23 +128,22 @@ export default function Dashboard() {
 
   return (
     <div className="relative flex flex-col min-w-0 break-words w-full mb-36 shadow-lg rounded bg-gray-800">
-      <div className="rounded-t mb-0 px-4 py-3 border-0 bg-blue-600">
+      <div className="rounded-t mb-0 px-4 py-3 border-0 bg-purple-600">
         <div className="flex flex-wrap items-center">
           <div className="relative w-full px-4 max-w-full flex-grow flex-1">
-            <h3 className="font-semibold text-2xl text-white">Statistiques du Stock</h3>
+            <h3 className="font-semibold text-2xl text-white">Statistiques du Stock Service</h3>
           </div>
         </div>
       </div>
       <div className="flex justify-center w-full overflow-x-auto p-4">
-        <canvas id="stockChart" width="400" height="200"></canvas>
+        <canvas id="serviceStockChart" width="400" height="200"></canvas>
       </div>
 
-      {/* Historique des Transformations */}
-      <div className="rounded-t mb-0 px-4 py-3 border-0 bg-green-600 mt-6">
+      <div className="rounded-t mb-0 px-4 py-3 border-0 bg-pink-600 mt-6">
         <div className="flex flex-wrap items-center">
           <div className="relative w-full px-4 max-w-full flex-grow flex-1">
             <h3 className="font-semibold text-2xl text-white">
-              Historique des Transformations
+              Historique des Transformations Service
             </h3>
           </div>
         </div>
@@ -158,24 +152,12 @@ export default function Dashboard() {
         <table className="items-center w-full bg-transparent border-collapse">
           <thead>
             <tr>
-              <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">
-                Date
-              </th>
-              <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">
-                Type
-              </th>
-              <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">
-                Source
-              </th>
-              <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">
-                Destination
-              </th>
-              <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">
-                Quantité (kg)
-              </th>
-              <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">
-                Actions
-              </th>
+              <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">Date</th>
+              <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">Type</th>
+              <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">Source</th>
+              <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">Destination</th>
+              <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">Quantité (kg)</th>
+              <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -192,27 +174,13 @@ export default function Dashboard() {
                     {new Date(t.dateTransformation).toLocaleString("fr-FR")}
                   </td>
                   <td className="border-t-0 px-6 align-middle text-sm p-4">
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-bold ${
-                        t.type === "MP→SemiPret"
-                          ? "bg-blue-200 text-blue-800"
-                          : "bg-green-200 text-green-800"
-                      }`}
-                    >
-                      {t.type === "MP→SemiPret"
-                        ? "MP → Semi-Prêt"
-                        : "Semi-Prêt → Final"}
+                    <span className="px-2 py-1 rounded text-xs font-bold bg-purple-200 text-purple-800">
+                      Semi-Prêt → Final
                     </span>
                   </td>
-                  <td className="border-t-0 px-6 align-middle text-sm p-4 text-white">
-                    {t.sourceNom}
-                  </td>
-                  <td className="border-t-0 px-6 align-middle text-sm p-4 text-white">
-                    {t.destinationNom}
-                  </td>
-                  <td className="border-t-0 px-6 align-middle text-sm p-4 text-white font-bold">
-                    {t.quantiteKg}
-                  </td>
+                  <td className="border-t-0 px-6 align-middle text-sm p-4 text-white">{t.sourceNom}</td>
+                  <td className="border-t-0 px-6 align-middle text-sm p-4 text-white">{t.destinationNom}</td>
+                  <td className="border-t-0 px-6 align-middle text-sm p-4 text-white font-bold">{t.quantiteKg}</td>
                   <td className="border-t-0 px-6 align-middle text-sm p-4">
                     <button
                       className="text-red-500 hover:text-red-700"
@@ -240,7 +208,7 @@ export default function Dashboard() {
                     onClick={() => setHistoryPage(index + 1)}
                     className={`px-4 py-2 rounded ${
                       historyPage === index + 1
-                        ? "bg-green-500 text-white"
+                        ? "bg-pink-500 text-white"
                         : "bg-gray-700 text-white"
                     }`}
                   >

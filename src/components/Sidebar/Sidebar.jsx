@@ -145,9 +145,85 @@ export default function Sidebar() {
                   <i className={`${iconClass("/admin/stock")} fa-boxes-stacked`}></i>{" "}
                   <span className="relative">
                     <span className="absolute inset-0 text-black opacity-30 blur-md -z-10">
-                      Gestion du Stock
+                      Stock Production
                     </span>
-                    <span className="drop-shadow-lg">Gestion du Stock</span>
+                    <span className="drop-shadow-lg">Stock Production</span>
+                  </span>
+                </Link>
+              </li>
+
+              {/* ====== SERVICE ====== */}
+              <hr className="my-4 md:min-w-full border-gray-300" />
+              <h6 className="md:min-w-full text-gray-500 text-xs uppercase font-bold block pt-1 pb-2 no-underline px-4">
+                Service
+              </h6>
+
+              <li className="items-center">
+                <Link
+                  className={linkClass("/admin/service-dashboard")}
+                  to="/admin/service-dashboard"
+                  onClick={() => handleSetActiveRoute("/admin/service-dashboard")}
+                >
+                  <i className={`${iconClass("/admin/service-dashboard")} fa-chart-line`}></i>{" "}
+                  <span className="relative">
+                    <span className="absolute inset-0 text-black opacity-30 blur-md -z-10">
+                      Dashboard Service
+                    </span>
+                    <span className="drop-shadow-lg">Dashboard Service</span>
+                  </span>
+                </Link>
+              </li>
+
+              <li className="items-center">
+                <Link
+                  className={linkClass("/admin/service-stock")}
+                  to="/admin/service-stock"
+                  onClick={() => handleSetActiveRoute("/admin/service-stock")}
+                >
+                  <i className={`${iconClass("/admin/service-stock")} fa-warehouse`}></i>{" "}
+                  <span className="relative">
+                    <span className="absolute inset-0 text-black opacity-30 blur-md -z-10">
+                      Stock Service
+                    </span>
+                    <span className="drop-shadow-lg">Stock Service</span>
+                  </span>
+                </Link>
+              </li>
+
+              <li className="items-center">
+                <Link
+                  className={linkClass("/admin/service-factures")}
+                  to="/admin/service-factures"
+                  onClick={() => handleSetActiveRoute("/admin/service-factures")}
+                >
+                  <i className={`${iconClass("/admin/service-factures")} fa-file-invoice-dollar`}></i>{" "}
+                  <span className="relative">
+                    <span className="absolute inset-0 text-black opacity-30 blur-md -z-10">
+                      Factures Service
+                    </span>
+                    <span className="drop-shadow-lg">Factures Service</span>
+                  </span>
+                </Link>
+              </li>
+
+              {/* ====== CAISSE ====== */}
+              <hr className="my-4 md:min-w-full border-gray-300" />
+              <h6 className="md:min-w-full text-gray-500 text-xs uppercase font-bold block pt-1 pb-2 no-underline px-4">
+                Caisse
+              </h6>
+
+              <li className="items-center">
+                <Link
+                  className={linkClass("/admin/caisse")}
+                  to="/admin/caisse"
+                  onClick={() => handleSetActiveRoute("/admin/caisse")}
+                >
+                  <i className={`${iconClass("/admin/caisse")} fa-cash-register`}></i>{" "}
+                  <span className="relative">
+                    <span className="absolute inset-0 text-black opacity-30 blur-md -z-10">
+                      Gestion de Caisse
+                    </span>
+                    <span className="drop-shadow-lg">Gestion de Caisse</span>
                   </span>
                 </Link>
               </li>

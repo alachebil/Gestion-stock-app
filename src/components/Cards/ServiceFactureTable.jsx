@@ -3,9 +3,9 @@ import axios from "axios";
 import { FaTrashAlt, FaFilePdf, FaEdit } from "react-icons/fa";
 import { jsPDF } from "jspdf";
 
-const API = "http://localhost:3000/facture";
+const API = "http://localhost:3000/service-facture";
 
-export default function FactureTable() {
+export default function ServiceFactureTable() {
   const [factures, setFactures] = useState([]);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -17,7 +17,7 @@ export default function FactureTable() {
   const [form, setForm] = useState({
     nomFournisseur: "",
     numTelephone: "",
-    refMatierePremiere: "",
+    refProduit: "",
     quantitePortee: "",
     prixTotal: "",
     prixUnite: "",
@@ -73,7 +73,7 @@ export default function FactureTable() {
       setForm({
         nomFournisseur: "",
         numTelephone: "",
-        refMatierePremiere: "",
+        refProduit: "",
         quantitePortee: "",
         prixTotal: "",
         prixUnite: "",
@@ -108,7 +108,7 @@ export default function FactureTable() {
     setEditForm({
       nomFournisseur: facture.nomFournisseur,
       numTelephone: facture.numTelephone,
-      refMatierePremiere: facture.refMatierePremiere,
+      refProduit: facture.refProduit,
       quantitePortee: facture.quantitePortee,
       prixTotal: facture.prixTotal,
       prixUnite: facture.prixUnite || 0,
@@ -156,28 +156,25 @@ export default function FactureTable() {
   const generatePDF = (facture) => {
     const doc = new jsPDF();
 
-    // Header
     doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
-    doc.text("FACTURE", 105, 25, { align: "center" });
+    doc.text("FACTURE SERVICE", 105, 25, { align: "center" });
 
-    doc.setDrawColor(41, 128, 185);
+    doc.setDrawColor(156, 39, 176);
     doc.setLineWidth(1);
     doc.line(20, 32, 190, 32);
 
-    // Company
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text("société Plastique Teboulba", 20, 42);
+    doc.text("société Plastique Teboulba - Service", 20, 42);
     doc.text(`Date: ${new Date().toLocaleDateString("fr-FR")}`, 150, 42);
 
-    // Facture info box
     doc.setFillColor(236, 240, 241);
     doc.rect(20, 50, 170, 104, "F");
 
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
-    doc.text("Details de la Facture", 25, 62);
+    doc.text("Details de la Facture Service", 25, 62);
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(11);
@@ -196,9 +193,9 @@ export default function FactureTable() {
     doc.text(facture.numTelephone, 85, startY + lineH);
 
     doc.setFont("helvetica", "bold");
-    doc.text("Ref Matiere Premiere:", 25, startY + lineH * 2);
+    doc.text("Ref Produit:", 25, startY + lineH * 2);
     doc.setFont("helvetica", "normal");
-    doc.text(facture.refMatierePremiere, 85, startY + lineH * 2);
+    doc.text(facture.refProduit, 85, startY + lineH * 2);
 
     doc.setFont("helvetica", "bold");
     doc.text("Quantite Portee:", 25, startY + lineH * 3);
@@ -229,14 +226,13 @@ export default function FactureTable() {
       startY + lineH * 7
     );
 
-    // Footer
-    doc.setDrawColor(41, 128, 185);
+    doc.setDrawColor(156, 39, 176);
     doc.setLineWidth(0.5);
     doc.line(20, 260, 190, 260);
     doc.setFontSize(9);
     doc.text("Document genere automatiquement", 105, 268, { align: "center" });
 
-    doc.save(`facture_${facture.nomFournisseur}_${new Date(facture.dateLivraison).toISOString().split("T")[0]}.pdf`);
+    doc.save(`facture_service_${facture.nomFournisseur}_${new Date(facture.dateLivraison).toISOString().split("T")[0]}.pdf`);
   };
 
   const formatDate = (dateString) => {
@@ -284,17 +280,16 @@ export default function FactureTable() {
         </div>
       )}
       <div className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded bg-gray-800">
-        <div className="rounded-t mb-0 px-4 py-3 border-0 bg-blue-600">
+        <div className="rounded-t mb-0 px-4 py-3 border-0 bg-purple-600">
           <div className="flex flex-wrap items-center">
             <div className="relative w-full px-4 max-w-full flex-grow flex-1">
               <h3 className="font-semibold text-2xl text-white">
-                Liste des Factures
+                Factures Service
               </h3>
             </div>
           </div>
         </div>
 
-        {/* Add form */}
         <form
           onSubmit={handleAdd}
           className="flex flex-wrap gap-3 px-6 py-4 items-end bg-gray-700"
@@ -317,11 +312,11 @@ export default function FactureTable() {
           />
           <input
             className="border rounded px-3 py-2 text-sm bg-gray-600 text-white placeholder-gray-400"
-            placeholder="Ref Matiere Premiere"
+            placeholder="Ref Produit"
             required
-            value={form.refMatierePremiere}
+            value={form.refProduit}
             onChange={(e) =>
-              setForm({ ...form, refMatierePremiere: e.target.value })
+              setForm({ ...form, refProduit: e.target.value })
             }
           />
           <input
@@ -388,84 +383,32 @@ export default function FactureTable() {
           <table className="items-center w-full bg-transparent border-collapse">
             <thead>
               <tr>
-                <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">
-                  Nom Fournisseur
-                </th>
-                <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">
-                  Telephone
-                </th>
-                <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">
-                  Ref Matiere Premiere
-                </th>
-                <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white cursor-pointer select-none" onClick={() => toggleSort("quantitePortee")}>
-                  Quantite Portee{sortIcon("quantitePortee")}
-                </th>
-                <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">
-                  Prix Total
-                </th>
-                <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">
-                  Prix Unitaire
-                </th>
-                <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white cursor-pointer select-none" onClick={() => toggleSort("prixDiverse")}>
-                  Prix Diversé (Payé){sortIcon("prixDiverse")}
-                </th>
-                <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white cursor-pointer select-none" onClick={() => toggleSort("dateLivraison")}>
-                  Date Livraison{sortIcon("dateLivraison")}
-                </th>
-                <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">
-                  Actions
-                </th>
+                <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">Nom Fournisseur</th>
+                <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">Telephone</th>
+                <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">Ref Produit</th>
+                <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white cursor-pointer select-none" onClick={() => toggleSort("quantitePortee")}>Quantite{sortIcon("quantitePortee")}</th>
+                <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">Prix Total</th>
+                <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">Prix Unitaire</th>
+                <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white cursor-pointer select-none" onClick={() => toggleSort("prixDiverse")}>Prix Diversé{sortIcon("prixDiverse")}</th>
+                <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white cursor-pointer select-none" onClick={() => toggleSort("dateLivraison")}>Date Livraison{sortIcon("dateLivraison")}</th>
+                <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">Actions</th>
               </tr>
             </thead>
             <tbody>
               {currentFactures.map((f) => (
                 <tr key={f._id} className="bg-gray-800 hover:bg-gray-700">
-                  <td className="border-t-0 px-6 align-middle text-sm p-4 text-white font-bold">
-                    {f.nomFournisseur}
-                  </td>
-                  <td className="border-t-0 px-6 align-middle text-sm p-4 text-white">
-                    {f.numTelephone}
-                  </td>
-                  <td className="border-t-0 px-6 align-middle text-sm p-4 text-white">
-                    {f.refMatierePremiere}
-                  </td>
-                  <td className="border-t-0 px-6 align-middle text-sm p-4 text-white">
-                    {f.quantitePortee} kg
-                  </td>
-                  <td className="border-t-0 px-6 align-middle text-sm p-4 text-white">
-                    {f.prixTotal} TND
-                  </td>
-                  <td className="border-t-0 px-6 align-middle text-sm p-4 text-white">
-                    {f.prixUnite || 0} TND
-                  </td>
-                  <td className="border-t-0 px-6 align-middle text-sm p-4 text-white">
-                    {f.prixDiverse || 0} TND
-                  </td>
-                  <td className="border-t-0 px-6 align-middle text-sm p-4 text-white">
-                    {formatDate(f.dateLivraison)}
-                  </td>
+                  <td className="border-t-0 px-6 align-middle text-sm p-4 text-white font-bold">{f.nomFournisseur}</td>
+                  <td className="border-t-0 px-6 align-middle text-sm p-4 text-white">{f.numTelephone}</td>
+                  <td className="border-t-0 px-6 align-middle text-sm p-4 text-white">{f.refProduit}</td>
+                  <td className="border-t-0 px-6 align-middle text-sm p-4 text-white">{f.quantitePortee} kg</td>
+                  <td className="border-t-0 px-6 align-middle text-sm p-4 text-white">{f.prixTotal} TND</td>
+                  <td className="border-t-0 px-6 align-middle text-sm p-4 text-white">{f.prixUnite || 0} TND</td>
+                  <td className="border-t-0 px-6 align-middle text-sm p-4 text-white">{f.prixDiverse || 0} TND</td>
+                  <td className="border-t-0 px-6 align-middle text-sm p-4 text-white">{formatDate(f.dateLivraison)}</td>
                   <td className="border-t-0 px-6 align-middle text-sm p-4">
-                    <button
-                      className="text-blue-400 hover:text-blue-300 mr-3"
-                      onClick={() => generatePDF(f)}
-                      title="Telecharger PDF"
-                    >
-                      <FaFilePdf className="inline text-lg" />
-                    </button>
-                    <button
-                      className="text-yellow-400 hover:text-yellow-300 mr-3"
-                      onClick={() => startEditFacture(f)}
-                      title="Modifier"
-                    >
-                      <FaEdit className="inline text-lg" />
-                    </button>
-                    <button
-                      className="text-red-500 hover:text-red-700"
-                      onClick={() => deleteFacture(f._id)}
-                      title="Supprimer"
-                    >
-                      <FaTrashAlt className="inline" />
-                    </button>
+                    <button className="text-blue-400 hover:text-blue-300 mr-3" onClick={() => generatePDF(f)} title="Telecharger PDF"><FaFilePdf className="inline text-lg" /></button>
+                    <button className="text-yellow-400 hover:text-yellow-300 mr-3" onClick={() => startEditFacture(f)} title="Modifier"><FaEdit className="inline text-lg" /></button>
+                    <button className="text-red-500 hover:text-red-700" onClick={() => deleteFacture(f._id)} title="Supprimer"><FaTrashAlt className="inline" /></button>
                   </td>
                 </tr>
               ))}
@@ -474,12 +417,9 @@ export default function FactureTable() {
         </div>
 
         {factures.length === 0 && (
-          <p className="text-gray-400 text-sm text-center py-6">
-            Aucune facture ajoutee
-          </p>
+          <p className="text-gray-400 text-sm text-center py-6">Aucune facture service ajoutée</p>
         )}
 
-        {/* Sum of Prix Diversé */}
         {factures.length > 0 && (
           <div className="px-6 py-3 bg-gray-700 border-t border-gray-600">
             <p className="text-white text-sm font-semibold text-right">
@@ -491,7 +431,6 @@ export default function FactureTable() {
           </div>
         )}
 
-        {/* Pagination */}
         {totalPages > 1 && (
           <div className="px-4 py-3">
             <nav>
@@ -502,7 +441,7 @@ export default function FactureTable() {
                       onClick={() => setCurrentPage(index + 1)}
                       className={`px-4 py-2 rounded ${
                         currentPage === index + 1
-                          ? "bg-blue-500 text-white"
+                          ? "bg-purple-500 text-white"
                           : "bg-gray-700 text-white"
                       }`}
                     >
@@ -516,15 +455,14 @@ export default function FactureTable() {
         )}
       </div>
 
-      {/* Edit Modal */}
       {editingFacture && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md shadow-xl">
-            <h3 className="text-lg font-bold text-white mb-4">Modifier la Facture</h3>
+            <h3 className="text-lg font-bold text-white mb-4">Modifier la Facture Service</h3>
             <form onSubmit={handleEditFacture} className="space-y-3">
               <input className="border rounded px-3 py-2 text-sm w-full bg-gray-600 text-white" placeholder="Nom Fournisseur" required value={editForm.nomFournisseur} onChange={(e) => setEditForm({ ...editForm, nomFournisseur: e.target.value })} />
               <input className="border rounded px-3 py-2 text-sm w-full bg-gray-600 text-white" placeholder="Num Telephone" required value={editForm.numTelephone} onChange={(e) => setEditForm({ ...editForm, numTelephone: e.target.value })} />
-              <input className="border rounded px-3 py-2 text-sm w-full bg-gray-600 text-white" placeholder="Ref Matiere Premiere" required value={editForm.refMatierePremiere} onChange={(e) => setEditForm({ ...editForm, refMatierePremiere: e.target.value })} />
+              <input className="border rounded px-3 py-2 text-sm w-full bg-gray-600 text-white" placeholder="Ref Produit" required value={editForm.refProduit} onChange={(e) => setEditForm({ ...editForm, refProduit: e.target.value })} />
               <input className="border rounded px-3 py-2 text-sm w-full bg-gray-600 text-white" type="number" min="0" step="0.01" placeholder="Quantite (kg)" required value={editForm.quantitePortee} onChange={(e) => setEditForm({ ...editForm, quantitePortee: e.target.value })} />
               <input className="border rounded px-3 py-2 text-sm w-full bg-gray-600 text-white" type="number" min="0" step="0.01" placeholder="Prix Total" required value={editForm.prixTotal} onChange={(e) => setEditForm({ ...editForm, prixTotal: e.target.value })} />
               <input className="border rounded px-3 py-2 text-sm w-full bg-gray-600 text-white" type="number" min="0" step="0.01" placeholder="Prix Unitaire" required value={editForm.prixUnite} onChange={(e) => setEditForm({ ...editForm, prixUnite: e.target.value })} />
@@ -532,7 +470,7 @@ export default function FactureTable() {
               <input className="border rounded px-3 py-2 text-sm w-full bg-gray-600 text-white" type="date" required value={editForm.dateLivraison} onChange={(e) => setEditForm({ ...editForm, dateLivraison: e.target.value })} />
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => { setEditingFacture(null); setEditForm({}); }} className="px-4 py-2 text-sm bg-gray-500 text-white rounded hover:bg-gray-400">Annuler</button>
-                <button type="submit" className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">Enregistrer</button>
+                <button type="submit" className="px-4 py-2 text-sm bg-purple-600 text-white rounded hover:bg-purple-700">Enregistrer</button>
               </div>
             </form>
           </div>

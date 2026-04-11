@@ -3,28 +3,24 @@ import axios from "axios";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
-const API = "http://localhost:3000/stock";
+const API = "http://localhost:3000/service-stock";
 
-export default function StockCard() {
+export default function ServiceStockCard() {
   const [summary, setSummary] = useState(null);
-  const [matieres, setMatieres] = useState([]);
   const [semiPrets, setSemiPrets] = useState([]);
   const [finals, setFinals] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Forms
-  const [matiereForm, setMatiereForm] = useState({ nom: "", quantiteKg: "" });
   const [semiPretForm, setSemiPretForm] = useState({ nom: "", type: "base", quantiteKg: "" });
   const [finalForm, setFinalForm] = useState({ type: "base", quantiteKg: "" });
 
   const [activeTab, setActiveTab] = useState("summary");
-  const [counters, setCounters] = useState({ matiere: 0, semiPretBase: 0, semiPretBargatere: 0, finalBase: 0, finalBargatere: 0 });
+  const [counters, setCounters] = useState({ semiPretBase: 0, semiPretBargatere: 0, finalBase: 0, finalBargatere: 0 });
 
   // Sort & Search states
-  const [matiereSortOrder, setMatiereSortOrder] = useState("none");
   const [semiSortOrder, setSemiSortOrder] = useState("none");
   const [finalSortOrder, setFinalSortOrder] = useState("none");
-  const [matiereSearch, setMatiereSearch] = useState("");
   const [semiSearch, setSemiSearch] = useState("");
   const [finalSearch, setFinalSearch] = useState("");
   const [finalEtatFilter, setFinalEtatFilter] = useState("tous");
@@ -36,15 +32,13 @@ export default function StockCard() {
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [sumRes, matRes, semiRes, finRes, cntRes] = await Promise.all([
+      const [sumRes, semiRes, finRes, cntRes] = await Promise.all([
         axios.get(`${API}/summary`),
-        axios.get(`${API}/matiere`),
         axios.get(`${API}/semi-pret`),
         axios.get(`${API}/final`),
         axios.get(`${API}/counters`),
       ]);
       setSummary(sumRes.data);
-      setMatieres(matRes.data);
       setSemiPrets(semiRes.data);
       setFinals(finRes.data);
       setCounters(cntRes.data);
@@ -55,17 +49,6 @@ export default function StockCard() {
   };
 
   useEffect(() => { fetchAll(); }, []);
-
-  const handleAddMatiere = async (e) => {
-    e.preventDefault();
-    if (Number(matiereForm.quantiteKg) <= 0) {
-      alert("La quantité doit être supérieure à 0");
-      return;
-    }
-    await axios.post(`${API}/matiere`, { ...matiereForm, quantiteKg: Number(matiereForm.quantiteKg) });
-    setMatiereForm({ nom: "", quantiteKg: "" });
-    fetchAll();
-  };
 
   const handleAddSemiPret = async (e) => {
     e.preventDefault();
@@ -117,7 +100,7 @@ export default function StockCard() {
   const handleEdit = async (e) => {
     e.preventDefault();
     try {
-      const { _id, __v, createdAt, updatedAt, matiereSource, produitSemiPretSource, etat, ...body } = editForm;
+      const { _id, __v, createdAt, updatedAt, etat, ...body } = editForm;
       await axios.put(`${API}/${editingItem.category}/${editingItem.id}`, body);
       cancelEdit();
       fetchAll();
@@ -135,7 +118,6 @@ export default function StockCard() {
     }
   };
 
-  // Sort helper
   const sortByQuantity = (arr, order) => {
     if (order === "none") return arr;
     return [...arr].sort((a, b) =>
@@ -150,15 +132,6 @@ export default function StockCard() {
 
   const sortIcon = (order) =>
     order === "asc" ? "↑" : order === "desc" ? "↓" : "↕";
-
-  // Search + Sort applied lists
-  const filteredMatieres = sortByQuantity(
-    matieres.filter(
-      (m) =>
-        m.nom.toLowerCase().includes(matiereSearch.toLowerCase())
-    ),
-    matiereSortOrder
-  );
 
   const filteredSemiPrets = sortByQuantity(
     semiPrets.filter(
@@ -179,65 +152,48 @@ export default function StockCard() {
     finalSortOrder
   );
 
-  // PDF Stock export
   const generateStockPDF = () => {
     const doc = new jsPDF();
 
     doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
-    doc.text("Etat du Stock", 105, 20, { align: "center" });
+    doc.text("Etat du Stock Service", 105, 20, { align: "center" });
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
     doc.text(`Genere le: ${new Date().toLocaleString("fr-FR")}`, 105, 28, { align: "center" });
 
-    doc.setDrawColor(41, 128, 185);
+    doc.setDrawColor(156, 39, 176);
     doc.setLineWidth(1);
     doc.line(20, 32, 190, 32);
 
     let y = 40;
 
-    // Matiere Premiere
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
-    doc.text("Matiere Premiere", 20, y);
-    y += 5;
-    autoTable(doc, {
-      startY: y,
-      head: [["Nom", "Quantite (kg)"]],
-      body: matieres.map((m) => [m.nom, m.quantiteKg]),
-      theme: "grid",
-      headStyles: { fillColor: [41, 128, 185] },
-    });
-    y = (doc.lastAutoTable?.finalY || y) + 15;
-
-    // Produit Semi-Pret
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("Produit Semi-Pret", 20, y);
+    doc.text("Produit Semi-Pret (Service)", 20, y);
     y += 5;
     autoTable(doc, {
       startY: y,
       head: [["Nom", "Type", "Quantite (kg)"]],
       body: semiPrets.map((s) => [s.nom, s.type, s.quantiteKg]),
       theme: "grid",
-      headStyles: { fillColor: [243, 156, 18] },
+      headStyles: { fillColor: [156, 39, 176] },
     });
     y = (doc.lastAutoTable?.finalY || y) + 15;
 
-    // Produit Final
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
-    doc.text("Produit Final", 20, y);
+    doc.text("Produit Final (Service)", 20, y);
     y += 5;
     autoTable(doc, {
       startY: y,
       head: [["Nom", "Type", "Quantite (kg)"]],
       body: finals.map((f) => [f.nom, f.type, f.quantiteKg]),
       theme: "grid",
-      headStyles: { fillColor: [39, 174, 96] },
+      headStyles: { fillColor: [233, 30, 99] },
     });
 
-    doc.save(`stock_${new Date().toISOString().split("T")[0]}.pdf`);
+    doc.save(`stock_service_${new Date().toISOString().split("T")[0]}.pdf`);
   };
 
   const tabBtn = (key, label) => (
@@ -245,21 +201,19 @@ export default function StockCard() {
       key={key}
       onClick={() => setActiveTab(key)}
       className={`px-4 py-2 text-sm font-semibold rounded-t-lg transition-colors ${
-        activeTab === key ? "bg-white text-blue-700 border-b-2 border-blue-700" : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+        activeTab === key ? "bg-white text-purple-700 border-b-2 border-purple-700" : "bg-gray-200 text-gray-600 hover:bg-gray-300"
       }`}
     >
       {label}
     </button>
   );
 
-  if (loading) return <p className="text-center mt-10 text-gray-500">Chargement du stock...</p>;
+  if (loading) return <p className="text-center mt-10 text-gray-500">Chargement du stock service...</p>;
 
   return (
     <div className="relative flex flex-col min-w-0 break-words w-full mb-6 shadow-lg rounded-lg bg-white">
-      {/* Tabs */}
       <div className="flex space-x-1 px-6 pt-4">
         {tabBtn("summary", "Résumé du Stock")}
-        {tabBtn("matiere", "Matière Première")}
         {tabBtn("semi", "Produit Semi-Prêt")}
         {tabBtn("final", "Produit Final")}
       </div>
@@ -269,7 +223,7 @@ export default function StockCard() {
         {activeTab === "summary" && summary && (
           <div>
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-gray-700">Résumé global du stock</h3>
+              <h3 className="text-lg font-bold text-gray-700">Résumé du stock service</h3>
               <button
                 onClick={generateStockPDF}
                 className="bg-red-600 text-white px-4 py-2 rounded text-sm hover:bg-red-700 flex items-center gap-2"
@@ -277,45 +231,29 @@ export default function StockCard() {
                 <i className="fas fa-file-pdf"></i> Exporter Stock en PDF
               </button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Matière Première */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-semibold text-blue-800 mb-2"><i className="fas fa-cubes mr-2"></i>Matière Première</h4>
-                {summary.matierePremieres.length === 0 ? (
-                  <p className="text-gray-500 text-sm">Aucune matière en stock</p>
-                ) : (
-                  summary.matierePremieres.map((m) => (
-                    <div key={m._id} className="flex justify-between text-sm py-1">
-                      <span className="text-gray-700">{m._id}</span>
-                      <span className="font-bold text-blue-700">{m.totalKg} kg ({m.count} entrées)</span>
-                    </div>
-                  ))
-                )}
-              </div>
-              {/* Semi-Prêt */}
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <h4 className="font-semibold text-yellow-800 mb-2"><i className="fas fa-cogs mr-2"></i>Produit Semi-Prêt</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                <h4 className="font-semibold text-purple-800 mb-2"><i className="fas fa-cogs mr-2"></i>Produit Semi-Prêt</h4>
                 {summary.produitsSemiPrets.length === 0 ? (
                   <p className="text-gray-500 text-sm">Aucun produit semi-prêt en stock</p>
                 ) : (
                   summary.produitsSemiPrets.map((s) => (
                     <div key={s._id} className="flex justify-between text-sm py-1">
                       <span className="text-gray-700">{s._id}</span>
-                      <span className="font-bold text-yellow-700">{s.totalKg} kg ({s.count} entrées)</span>
+                      <span className="font-bold text-purple-700">{s.totalKg} kg ({s.count} entrées)</span>
                     </div>
                   ))
                 )}
               </div>
-              {/* Final */}
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h4 className="font-semibold text-green-800 mb-2"><i className="fas fa-box mr-2"></i>Produit Final</h4>
+              <div className="bg-pink-50 border border-pink-200 rounded-lg p-4">
+                <h4 className="font-semibold text-pink-800 mb-2"><i className="fas fa-box mr-2"></i>Produit Final</h4>
                 {summary.produitsFinals.length === 0 ? (
                   <p className="text-gray-500 text-sm">Aucun produit final en stock</p>
                 ) : (
                   summary.produitsFinals.map((f) => (
                     <div key={f._id} className="flex justify-between text-sm py-1">
                       <span className="text-gray-700">{f._id}</span>
-                      <span className="font-bold text-green-700">{f.totalKg} kg ({f.count} entrées)</span>
+                      <span className="font-bold text-pink-700">{f.totalKg} kg ({f.count} entrées)</span>
                     </div>
                   ))
                 )}
@@ -324,44 +262,10 @@ export default function StockCard() {
           </div>
         )}
 
-        {/* ============ MATIERE PREMIERE ============ */}
-        {activeTab === "matiere" && (
-          <div>
-            <h3 className="text-lg font-bold text-gray-700 mb-4">Matière Première</h3>
-            <input
-              className="border rounded px-3 py-2 text-sm mb-4 w-full"
-              placeholder="Rechercher par nom..."
-              value={matiereSearch}
-              onChange={(e) => setMatiereSearch(e.target.value)}
-            />
-            <form onSubmit={handleAddMatiere} className="flex flex-wrap gap-3 mb-6 items-end">
-              <input className="border rounded px-3 py-2 text-sm" placeholder="Nom" required value={matiereForm.nom} onChange={(e) => setMatiereForm({ ...matiereForm, nom: e.target.value })} />
-              <input className="border rounded px-3 py-2 text-sm w-28" type="number" min="0.01" step="0.01" placeholder="Quantité (kg)" required value={matiereForm.quantiteKg} onChange={(e) => setMatiereForm({ ...matiereForm, quantiteKg: e.target.value })} />
-              <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">Ajouter</button>
-            </form>
-            <table className="w-full text-sm text-left">
-              <thead className="bg-gray-100"><tr><th className="px-4 py-2">Nom</th><th className="px-4 py-2 cursor-pointer select-none" onClick={() => toggleSort(matiereSortOrder, setMatiereSortOrder)}>Quantité (kg) {sortIcon(matiereSortOrder)}</th><th className="px-4 py-2">Actions</th></tr></thead>
-              <tbody>
-                {filteredMatieres.map((m) => (
-                  <tr key={m._id} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-2">{m.nom}</td>
-                    <td className="px-4 py-2 font-semibold">{m.quantiteKg}</td>
-                    <td className="px-4 py-2">
-                      <button onClick={() => startEdit("matiere", m)} className="text-blue-500 hover:text-blue-700 text-xs mr-2"><i className="fas fa-edit"></i></button>
-                      <button onClick={() => handleDelete("matiere", m._id)} className="text-red-500 hover:text-red-700 text-xs"><i className="fas fa-trash"></i></button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {filteredMatieres.length === 0 && <p className="text-gray-400 text-sm text-center mt-4">Aucune matière première trouvée</p>}
-          </div>
-        )}
-
         {/* ============ SEMI-PRET ============ */}
         {activeTab === "semi" && (
           <div>
-            <h3 className="text-lg font-bold text-gray-700 mb-4">Produit Semi-Prêt</h3>
+            <h3 className="text-lg font-bold text-gray-700 mb-4">Produit Semi-Prêt (Achat direct)</h3>
             <input
               className="border rounded px-3 py-2 text-sm mb-4 w-full"
               placeholder="Rechercher par nom ou type..."
@@ -374,8 +278,7 @@ export default function StockCard() {
                 <option>base</option><option>bargatere</option>
               </select>
               <input className="border rounded px-3 py-2 text-sm w-28" type="number" min="0.01" step="0.01" placeholder="Quantité (kg)" required value={semiPretForm.quantiteKg} onChange={(e) => setSemiPretForm({ ...semiPretForm, quantiteKg: e.target.value })} />
-              <span className="text-sm text-gray-500">Stock MP disponible: <strong className="text-blue-700">{counters.matiere?.toFixed(2)} kg</strong></span>
-              <button type="submit" className="bg-yellow-500 text-white px-4 py-2 rounded text-sm hover:bg-yellow-600">Ajouter</button>
+              <button type="submit" className="bg-purple-600 text-white px-4 py-2 rounded text-sm hover:bg-purple-700">Ajouter</button>
             </form>
             <table className="w-full text-sm text-left">
               <thead className="bg-gray-100"><tr><th className="px-4 py-2">Nom</th><th className="px-4 py-2">Type</th><th className="px-4 py-2 cursor-pointer select-none" onClick={() => toggleSort(semiSortOrder, setSemiSortOrder)}>Quantité (kg) {sortIcon(semiSortOrder)}</th><th className="px-4 py-2">Actions</th></tr></thead>
@@ -383,7 +286,7 @@ export default function StockCard() {
                 {filteredSemiPrets.map((s) => (
                   <tr key={s._id} className="border-b hover:bg-gray-50">
                     <td className="px-4 py-2">{s.nom}</td>
-                    <td className="px-4 py-2"><span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">{s.type}</span></td>
+                    <td className="px-4 py-2"><span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">{s.type}</span></td>
                     <td className="px-4 py-2 font-semibold">{s.quantiteKg}</td>
                     <td className="px-4 py-2">
                       <button onClick={() => startEdit("semi-pret", s)} className="text-blue-500 hover:text-blue-700 text-xs mr-2"><i className="fas fa-edit"></i></button>
@@ -423,8 +326,8 @@ export default function StockCard() {
                 <option value="base">Base</option><option value="bargatere">Bargatère</option>
               </select>
               <input className="border rounded px-3 py-2 text-sm w-28" type="number" min="0.01" step="0.01" placeholder="Quantité (kg)" required value={finalForm.quantiteKg} onChange={(e) => setFinalForm({ ...finalForm, quantiteKg: e.target.value })} />
-              <span className="text-sm text-gray-500">Stock SP Base: <strong className="text-yellow-700">{(counters.semiPretBase || 0).toFixed(2)} kg</strong> | SP Bargatère: <strong className="text-yellow-700">{(counters.semiPretBargatere || 0).toFixed(2)} kg</strong></span>
-              <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">Ajouter</button>
+              <span className="text-sm text-gray-500">Stock SP Base: <strong className="text-purple-700">{(counters.semiPretBase || 0).toFixed(2)} kg</strong> | SP Bargatère: <strong className="text-purple-700">{(counters.semiPretBargatere || 0).toFixed(2)} kg</strong></span>
+              <button type="submit" className="bg-pink-600 text-white px-4 py-2 rounded text-sm hover:bg-pink-700">Ajouter</button>
             </form>
             <table className="w-full text-sm text-left">
               <thead className="bg-gray-100"><tr><th className="px-4 py-2">Nom</th><th className="px-4 py-2">Type</th><th className="px-4 py-2 cursor-pointer select-none" onClick={() => toggleSort(finalSortOrder, setFinalSortOrder)}>Quantité (kg) {sortIcon(finalSortOrder)}</th><th className="px-4 py-2">État</th><th className="px-4 py-2">Actions</th></tr></thead>
@@ -432,7 +335,7 @@ export default function StockCard() {
                 {filteredFinals.map((f) => (
                   <tr key={f._id} className="border-b hover:bg-gray-50">
                     <td className="px-4 py-2">{f.nom}</td>
-                    <td className="px-4 py-2"><span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">{f.type}</span></td>
+                    <td className="px-4 py-2"><span className="bg-pink-100 text-pink-800 text-xs px-2 py-1 rounded">{f.type}</span></td>
                     <td className="px-4 py-2 font-semibold">{f.quantiteKg}</td>
                     <td className="px-4 py-2">
                       <button
@@ -453,7 +356,6 @@ export default function StockCard() {
             {filteredFinals.length === 0 && <p className="text-gray-400 text-sm text-center mt-4">Aucun produit final trouvé</p>}
           </div>
         )}
-
       </div>
 
       {/* Edit Modal */}
@@ -480,7 +382,7 @@ export default function StockCard() {
               </div>
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={cancelEdit} className="px-4 py-2 text-sm bg-gray-300 rounded hover:bg-gray-400">Annuler</button>
-                <button type="submit" className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">Enregistrer</button>
+                <button type="submit" className="px-4 py-2 text-sm bg-purple-600 text-white rounded hover:bg-purple-700">Enregistrer</button>
               </div>
             </form>
           </div>

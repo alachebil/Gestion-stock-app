@@ -13,6 +13,10 @@ import Tables from "./views/admin/Tables";
 import TableFacture from "./views/admin/TableFacture";
 import StockManagement from "./views/admin/StockManagement";
 import TableReclam from "./views/admin/TableReclam";
+import ServiceDashboard from "./views/admin/ServiceDashboard";
+import ServiceStockManagement from "./views/admin/ServiceStockManagement";
+import ServiceTableFacture from "./views/admin/ServiceTableFacture";
+import CaisseManagement from "./views/admin/CaisseManagement";
 
 import Login from "./views/auth/Login";
 import Register from "./views/auth/Register";
@@ -28,7 +32,10 @@ function App() {
           <Route path="factures" element={<TableFacture />} />
           <Route path="tableReclam" element={<TableReclam />} />
           <Route path="stock" element={<StockManagement />} />
-          
+          <Route path="service-dashboard" element={<ServiceDashboard />} />
+          <Route path="service-stock" element={<ServiceStockManagement />} />
+          <Route path="service-factures" element={<ServiceTableFacture />} />
+          <Route path="caisse" element={<CaisseManagement />} />
 
         </Route>
         <Route path="/auth/*" element={<Auth />}>
