@@ -56,6 +56,50 @@ export default function Sidebar() {
             }
           >
             <ul className="md:flex-col md:min-w-full flex flex-col list-none">
+              
+              <li className="items-center">
+                <Link
+                  className={linkClass("/admin/tables")}
+                  to="/admin/tables"
+                  onClick={() => handleSetActiveRoute("/admin/tables")}
+                >
+                  <i className={`${iconClass("/admin/tables")} fa-table`}></i>{" "}
+                  <span className="relative">
+                    <span className="absolute inset-0 text-black opacity-30 blur-md -z-10">
+                      Gestion Utilisateur
+                    </span>
+                    <span className="drop-shadow-lg">Gestion Utilisateur</span>
+                  </span>
+                </Link>
+             </li>
+
+
+
+
+
+             <li className="items-center">
+                <Link
+                  className={linkClass("/admin/tableReclam")}
+                  to="/admin/tableReclam"
+                  onClick={() => handleSetActiveRoute("/admin/tableReclam")}
+                >
+                  <i className={`${iconClass("/admin/tableReclam")} fa-table`}></i>{" "}
+                  <span className="relative">
+                    <span className="absolute inset-0 text-black opacity-30 blur-md -z-10">
+                      Gestion Réclamations
+                    </span>
+                    <span className="drop-shadow-lg">Gestion Réclamations</span>
+                  </span>
+                </Link>
+              </li>
+
+
+              {/* ====== PRODUCTION ====== */}
+              <hr className="my-4 md:min-w-full border-gray-300" />
+              <h6 className="md:min-w-full text-gray-500 text-xs uppercase font-bold block pt-1 pb-2 no-underline px-4">
+                Production
+              </h6>
+
               <li className="items-center">
                 <Link
                   className={linkClass("/admin/dashboard")}
@@ -72,21 +116,7 @@ export default function Sidebar() {
                 </Link>
               </li>
 
-              <li className="items-center">
-                <Link
-                  className={linkClass("/admin/tables")}
-                  to="/admin/tables"
-                  onClick={() => handleSetActiveRoute("/admin/tables")}
-                >
-                  <i className={`${iconClass("/admin/tables")} fa-table`}></i>{" "}
-                  <span className="relative">
-                    <span className="absolute inset-0 text-black opacity-30 blur-md -z-10">
-                      Gestion Utilisateur
-                    </span>
-                    <span className="drop-shadow-lg">Gestion Utilisateur</span>
-                  </span>
-                </Link>
-             </li>
+              
 
               <li className="items-center">
                 <Link
@@ -104,37 +134,7 @@ export default function Sidebar() {
                 </Link>
               </li>
 
-              <li className="items-center">
-                <Link
-                  className={linkClass("/admin/tableReclam")}
-                  to="/admin/tableReclam"
-                  onClick={() => handleSetActiveRoute("/admin/tableReclam")}
-                >
-                  <i className={`${iconClass("/admin/tableReclam")} fa-table`}></i>{" "}
-                  <span className="relative">
-                    <span className="absolute inset-0 text-black opacity-30 blur-md -z-10">
-                      Gestion Réclamations
-                    </span>
-                    <span className="drop-shadow-lg">Gestion Réclamations</span>
-                  </span>
-                </Link>
-              </li>
 
-              {/* <li className="items-center">
-                <Link
-                  className={linkClass("/admin/tableVM")}
-                  to="/admin/tableVM"
-                  onClick={() => handleSetActiveRoute("/admin/tableVM")}
-                >
-                  <i className={`${iconClass("/admin/tableVM")} fa-table`}></i>{" "}
-                  <span className="relative">
-                    <span className="absolute inset-0 text-black opacity-30 blur-md -z-10">
-                      Gestion des VMS
-                    </span>
-                    <span className="drop-shadow-lg">Gestion des VMS</span>
-                  </span>
-                </Link>
-              </li> */}
 
               <li className="items-center">
                 <Link
@@ -206,6 +206,29 @@ export default function Sidebar() {
                 </Link>
               </li>
 
+
+              {/* ====== CLIENTS ====== */}
+              <hr className="my-4 md:min-w-full border-gray-300" />
+              <h6 className="md:min-w-full text-gray-500 text-xs uppercase font-bold block pt-1 pb-2 no-underline px-4">
+                Clients
+              </h6>
+
+              <li className="items-center">
+                <Link
+                  className={linkClass("/admin/clients")}
+                  to="/admin/clients"
+                  onClick={() => handleSetActiveRoute("/admin/clients")}
+                >
+                  <i className={`${iconClass("/admin/clients")} fa-users`}></i>{" "}
+                  <span className="relative">
+                    <span className="absolute inset-0 text-black opacity-30 blur-md -z-10">
+                      Gestion Clients
+                    </span>
+                    <span className="drop-shadow-lg">Gestion Clients</span>
+                  </span>
+                </Link>
+              </li>
+
               {/* ====== CAISSE ====== */}
               <hr className="my-4 md:min-w-full border-gray-300" />
               <h6 className="md:min-w-full text-gray-500 text-xs uppercase font-bold block pt-1 pb-2 no-underline px-4">
@@ -227,6 +250,8 @@ export default function Sidebar() {
                   </span>
                 </Link>
               </li>
+
+              
 
             </ul>
           </div>

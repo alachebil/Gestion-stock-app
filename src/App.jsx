@@ -17,6 +17,7 @@ import ServiceDashboard from "./views/admin/ServiceDashboard";
 import ServiceStockManagement from "./views/admin/ServiceStockManagement";
 import ServiceTableFacture from "./views/admin/ServiceTableFacture";
 import CaisseManagement from "./views/admin/CaisseManagement";
+import ClientManagement from "./views/admin/ClientManagement";
 
 import Login from "./views/auth/Login";
 import Register from "./views/auth/Register";
@@ -36,6 +37,7 @@ function App() {
           <Route path="service-stock" element={<ServiceStockManagement />} />
           <Route path="service-factures" element={<ServiceTableFacture />} />
           <Route path="caisse" element={<CaisseManagement />} />
+          <Route path="clients" element={<ClientManagement />} />
 
         </Route>
         <Route path="/auth/*" element={<Auth />}>

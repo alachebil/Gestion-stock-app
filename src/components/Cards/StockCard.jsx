@@ -4,6 +4,8 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
 const API = "http://localhost:3000/stock";
+const CLIENT_API = "http://localhost:3000/client";
+const VENTE_API = "http://localhost:3000/vente";
 
 export default function StockCard() {
   const [summary, setSummary] = useState(null);
@@ -32,6 +34,16 @@ export default function StockCard() {
   // Edit states
   const [editingItem, setEditingItem] = useState(null);
   const [editForm, setEditForm] = useState({});
+
+  // Vente states
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [showVentePopup, setShowVentePopup] = useState(false);
+  const [clients, setClients] = useState([]);
+  const [selectedClientId, setSelectedClientId] = useState("");
+  const [prixKgBase, setPrixKgBase] = useState("");
+  const [prixKgBargatere, setPrixKgBargatere] = useState("");
+  const [chauffeur, setChauffeur] = useState("");
+  const [matriculation, setMatriculation] = useState("");
 
   const fetchAll = async () => {
     setLoading(true);
@@ -132,6 +144,140 @@ export default function StockCard() {
       setFinals(finals.map((f) => (f._id === id ? res.data : f)));
     } catch (err) {
       alert(err.response?.data?.message || "Erreur lors du changement d'état");
+    }
+  };
+
+  // Vente helpers
+  const toggleSelectProduct = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const selectAllDispo = () => {
+    const dispoIds = filteredFinals.filter((f) => f.etat === "dispo").map((f) => f._id);
+    setSelectedIds((prev) => {
+      const allSelected = dispoIds.every((id) => prev.includes(id));
+      if (allSelected) return prev.filter((id) => !dispoIds.includes(id));
+      return [...new Set([...prev, ...dispoIds])];
+    });
+  };
+
+  const openVentePopup = async () => {
+    if (selectedIds.length === 0) { alert("Sélectionnez au moins un produit"); return; }
+    try {
+      const res = await axios.get(CLIENT_API);
+      setClients(res.data);
+    } catch { /* ignore */ }
+    setShowVentePopup(true);
+  };
+
+  const selectedProducts = finals.filter((f) => selectedIds.includes(f._id));
+  const groupedSelected = selectedProducts.reduce((acc, p) => {
+    if (!acc[p.type]) acc[p.type] = { totalKg: 0, count: 0 };
+    acc[p.type].totalKg += p.quantiteKg;
+    acc[p.type].count += 1;
+    return acc;
+  }, {});
+
+  const calcTotal = () => {
+    let total = 0;
+    if (groupedSelected.base && prixKgBase) total += groupedSelected.base.totalKg * Number(prixKgBase);
+    if (groupedSelected.bargatere && prixKgBargatere) total += groupedSelected.bargatere.totalKg * Number(prixKgBargatere);
+    return total;
+  };
+
+  const generateVentePDF = (vente, clientObj) => {
+    const doc = new jsPDF();
+    doc.setFontSize(20);
+    doc.setFont("helvetica", "bold");
+    doc.text("RPL industrie", 105, 18, { align: "center" });
+    doc.setFontSize(14);
+    doc.text("Bon de Vente", 105, 28, { align: "center" });
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Date: ${new Date(vente.dateVente).toLocaleString("fr-FR")}`, 20, 38);
+    doc.setDrawColor(41, 128, 185);
+    doc.setLineWidth(0.5);
+    doc.line(20, 42, 190, 42);
+
+    let y = 50;
+    doc.setFont("helvetica", "bold");
+    doc.text("Client:", 20, y);
+    doc.setFont("helvetica", "normal");
+    doc.text(`${clientObj.nom}  |  Tél: ${clientObj.telephone}  |  Adresse: ${clientObj.adresse}`, 45, y);
+    y += 8;
+    doc.setFont("helvetica", "bold");
+    doc.text("Chauffeur:", 20, y);
+    doc.setFont("helvetica", "normal");
+    doc.text(`${vente.chauffeur}  |  Matriculation: ${vente.matriculation}`, 50, y);
+    y += 12;
+
+    doc.setFont("helvetica", "bold");
+    doc.text("Produits vendus:", 20, y);
+    y += 4;
+    autoTable(doc, {
+      startY: y,
+      head: [["Nom", "Type", "Quantité (kg)"]],
+      body: vente.produits.map((p) => [p.nom, p.type, p.quantiteKg]),
+      theme: "grid",
+      headStyles: { fillColor: [41, 128, 185] },
+    });
+    y = (doc.lastAutoTable?.finalY || y) + 10;
+
+    doc.setFont("helvetica", "bold");
+    doc.text("Récapitulatif par type:", 20, y);
+    y += 4;
+    autoTable(doc, {
+      startY: y,
+      head: [["Type", "Quantité totale (kg)", "Prix/kg (TND)", "Sous-total (TND)"]],
+      body: vente.prixParType.map((pt) => [pt.type, pt.totalKg.toFixed(2), pt.prixKg.toFixed(2), pt.sousTotal.toFixed(2)]),
+      theme: "grid",
+      headStyles: { fillColor: [39, 174, 96] },
+    });
+    y = (doc.lastAutoTable?.finalY || y) + 10;
+
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Total Général: ${vente.totalGeneral.toFixed(2)} TND`, 20, y);
+
+    doc.save(`bon_de_vente_${clientObj.nom}_${new Date().toISOString().split("T")[0]}.pdf`);
+  };
+
+  const handleSubmitVente = async () => {
+    if (!selectedClientId) { alert("Sélectionnez un client"); return; }
+    if (!chauffeur || !matriculation) { alert("Remplissez chauffeur et matriculation"); return; }
+    const prixParType = [];
+    if (groupedSelected.base) {
+      if (!prixKgBase || Number(prixKgBase) <= 0) { alert("Entrez un prix/kg pour le type Base"); return; }
+      prixParType.push({ type: "base", prixKg: Number(prixKgBase) });
+    }
+    if (groupedSelected.bargatere) {
+      if (!prixKgBargatere || Number(prixKgBargatere) <= 0) { alert("Entrez un prix/kg pour le type Bargatère"); return; }
+      prixParType.push({ type: "bargatere", prixKg: Number(prixKgBargatere) });
+    }
+    try {
+      const res = await axios.post(VENTE_API, {
+        clientId: selectedClientId,
+        produitIds: selectedIds,
+        prixParType,
+        chauffeur,
+        matriculation,
+        source: "production",
+      });
+      const clientObj = clients.find((c) => c._id === selectedClientId);
+      generateVentePDF(res.data, clientObj);
+      // Reset
+      setShowVentePopup(false);
+      setSelectedIds([]);
+      setSelectedClientId("");
+      setPrixKgBase("");
+      setPrixKgBargatere("");
+      setChauffeur("");
+      setMatriculation("");
+      fetchAll();
+    } catch (err) {
+      alert(err.response?.data?.message || "Erreur lors de la vente");
     }
   };
 
@@ -400,7 +546,17 @@ export default function StockCard() {
         {/* ============ FINAL ============ */}
         {activeTab === "final" && (
           <div>
-            <h3 className="text-lg font-bold text-gray-700 mb-4">Produit Final</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-gray-700">Produit Final</h3>
+              {selectedIds.length > 0 && (
+                <button
+                  onClick={openVentePopup}
+                  className="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700 flex items-center gap-2"
+                >
+                  <i className="fas fa-shopping-cart"></i> Vendre ({selectedIds.length})
+                </button>
+              )}
+            </div>
             <div className="flex flex-wrap gap-3 mb-4 items-center">
               <input
                 className="border rounded px-3 py-2 text-sm flex-1"
@@ -427,10 +583,15 @@ export default function StockCard() {
               <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">Ajouter</button>
             </form>
             <table className="w-full text-sm text-left">
-              <thead className="bg-gray-100"><tr><th className="px-4 py-2">Nom</th><th className="px-4 py-2">Type</th><th className="px-4 py-2 cursor-pointer select-none" onClick={() => toggleSort(finalSortOrder, setFinalSortOrder)}>Quantité (kg) {sortIcon(finalSortOrder)}</th><th className="px-4 py-2">État</th><th className="px-4 py-2">Actions</th></tr></thead>
+              <thead className="bg-gray-100"><tr><th className="px-4 py-2"><input type="checkbox" onChange={selectAllDispo} checked={filteredFinals.filter(f => f.etat === "dispo").length > 0 && filteredFinals.filter(f => f.etat === "dispo").every(f => selectedIds.includes(f._id))} /></th><th className="px-4 py-2">Nom</th><th className="px-4 py-2">Type</th><th className="px-4 py-2 cursor-pointer select-none" onClick={() => toggleSort(finalSortOrder, setFinalSortOrder)}>Quantité (kg) {sortIcon(finalSortOrder)}</th><th className="px-4 py-2">État</th><th className="px-4 py-2">Actions</th></tr></thead>
               <tbody>
                 {filteredFinals.map((f) => (
-                  <tr key={f._id} className="border-b hover:bg-gray-50">
+                  <tr key={f._id} className={`border-b hover:bg-gray-50 ${selectedIds.includes(f._id) ? "bg-indigo-50" : ""}`}>
+                    <td className="px-4 py-2">
+                      {f.etat === "dispo" && (
+                        <input type="checkbox" checked={selectedIds.includes(f._id)} onChange={() => toggleSelectProduct(f._id)} />
+                      )}
+                    </td>
                     <td className="px-4 py-2">{f.nom}</td>
                     <td className="px-4 py-2"><span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">{f.type}</span></td>
                     <td className="px-4 py-2 font-semibold">{f.quantiteKg}</td>
@@ -483,6 +644,80 @@ export default function StockCard() {
                 <button type="submit" className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">Enregistrer</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Vente Popup */}
+      {showVentePopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl shadow-xl max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-bold text-gray-700 mb-4"><i className="fas fa-shopping-cart mr-2"></i>Nouvelle Vente (Production)</h3>
+
+            {/* Client */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-600 mb-1">Client</label>
+              <select className="border rounded px-3 py-2 text-sm w-full" value={selectedClientId} onChange={(e) => setSelectedClientId(e.target.value)}>
+                <option value="">-- Sélectionner un client --</option>
+                {clients.map((c) => (<option key={c._id} value={c._id}>{c.nom} - {c.telephone}</option>))}
+              </select>
+            </div>
+
+            {/* Selected products summary */}
+            <div className="mb-4 bg-gray-50 rounded p-3">
+              <h4 className="font-semibold text-sm text-gray-700 mb-2">Produits sélectionnés ({selectedProducts.length})</h4>
+              <div className="max-h-32 overflow-y-auto">
+                {selectedProducts.map((p) => (
+                  <div key={p._id} className="flex justify-between text-xs py-1 border-b">
+                    <span>{p.nom}</span>
+                    <span><span className="bg-green-100 text-green-800 px-2 py-0.5 rounded">{p.type}</span> - {p.quantiteKg} kg</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Quantities by type + prix/kg */}
+            <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              {groupedSelected.base && (
+                <div className="bg-blue-50 border border-blue-200 rounded p-3">
+                  <h5 className="font-semibold text-blue-800 text-sm mb-1">Base</h5>
+                  <p className="text-xs text-gray-600">{groupedSelected.base.count} produit(s) - {groupedSelected.base.totalKg.toFixed(2)} kg</p>
+                  <input className="border rounded px-3 py-2 text-sm w-full mt-2" type="number" min="0.01" step="0.01" placeholder="Prix / kg (TND)" value={prixKgBase} onChange={(e) => setPrixKgBase(e.target.value)} />
+                  {prixKgBase && <p className="text-xs text-blue-700 mt-1 font-bold">Sous-total: {(groupedSelected.base.totalKg * Number(prixKgBase)).toFixed(2)} TND</p>}
+                </div>
+              )}
+              {groupedSelected.bargatere && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
+                  <h5 className="font-semibold text-yellow-800 text-sm mb-1">Bargatère</h5>
+                  <p className="text-xs text-gray-600">{groupedSelected.bargatere.count} produit(s) - {groupedSelected.bargatere.totalKg.toFixed(2)} kg</p>
+                  <input className="border rounded px-3 py-2 text-sm w-full mt-2" type="number" min="0.01" step="0.01" placeholder="Prix / kg (TND)" value={prixKgBargatere} onChange={(e) => setPrixKgBargatere(e.target.value)} />
+                  {prixKgBargatere && <p className="text-xs text-yellow-700 mt-1 font-bold">Sous-total: {(groupedSelected.bargatere.totalKg * Number(prixKgBargatere)).toFixed(2)} TND</p>}
+                </div>
+              )}
+            </div>
+
+            {/* Chauffeur / Matriculation */}
+            <div className="mb-4 grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Chauffeur</label>
+                <input className="border rounded px-3 py-2 text-sm w-full" placeholder="Nom du chauffeur" value={chauffeur} onChange={(e) => setChauffeur(e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Matriculation</label>
+                <input className="border rounded px-3 py-2 text-sm w-full" placeholder="Matriculation véhicule" value={matriculation} onChange={(e) => setMatriculation(e.target.value)} />
+              </div>
+            </div>
+
+            {/* Total */}
+            <div className="mb-4 bg-green-50 border border-green-300 rounded p-3 text-center">
+              <span className="text-lg font-bold text-green-800">Total Général: {calcTotal().toFixed(2)} TND</span>
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setShowVentePopup(false)} className="px-4 py-2 text-sm bg-gray-300 rounded hover:bg-gray-400">Annuler</button>
+              <button onClick={handleSubmitVente} className="px-4 py-2 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700"><i className="fas fa-check mr-1"></i>Terminer</button>
+            </div>
           </div>
         </div>
       )}
