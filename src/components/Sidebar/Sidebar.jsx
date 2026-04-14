@@ -39,7 +39,7 @@ export default function Sidebar() {
 >
   <span className="absolute inset-0 -z-10 before:content-[''] before:absolute before:inset-0 before:bg-blue-500 before:opacity-80 before:blur-xl before:rounded-full before:w-full before:h-full before:animate-pulse">
   </span>
-  <span className="text-gray-900 drop-shadow-lg">société plastique Teboulba</span>
+  <span className="text-gray-900 drop-shadow-lg">RPL industrie</span>
 </Link>
 
 

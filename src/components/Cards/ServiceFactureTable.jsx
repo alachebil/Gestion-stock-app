@@ -166,7 +166,7 @@ export default function ServiceFactureTable() {
 
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text("société Plastique Teboulba - Service", 20, 42);
+    doc.text("RPL industrie - Service", 20, 42);
     doc.text(`Date: ${new Date().toLocaleDateString("fr-FR")}`, 150, 42);
 
     doc.setFillColor(236, 240, 241);

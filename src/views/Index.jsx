@@ -48,7 +48,7 @@ export default function Index() {
           <div className="container relative mx-auto text-center">
             <div className="w-full lg:w-6/12 px-4 mx-auto">
               <h1 className="text-white font-bold text-5xl">
-                société Plastique Teboulba
+                RPL industrie
               </h1>
               <p className="mt-4 text-lg text-gray-300">
                 Gestion de stock - MatiÃ¨re premiÃ¨re, Produit semi-prÃªt et Produit final

@@ -168,7 +168,7 @@ export default function FactureTable() {
     // Company
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text("société Plastique Teboulba", 20, 42);
+    doc.text("RPL industrie", 20, 42);
     doc.text(`Date: ${new Date().toLocaleDateString("fr-FR")}`, 150, 42);
 
     // Facture info box
