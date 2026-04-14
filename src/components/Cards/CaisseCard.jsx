@@ -10,6 +10,10 @@ export default function CaisseCard() {
   const [form, setForm] = useState({ type: "depense", description: "", montant: "", date: "" });
   const [error, setError] = useState(null);
 
+  // Pagination
+  const entriesPerPage = 10;
+  const [caissePage, setCaissePage] = useState(1);
+
   const fetchAll = async () => {
     setLoading(true);
     try {
@@ -145,7 +149,7 @@ export default function CaisseCard() {
             </tr>
           </thead>
           <tbody>
-            {entries.map((e) => (
+            {entries.slice((caissePage - 1) * entriesPerPage, caissePage * entriesPerPage).map((e) => (
               <tr key={e._id} className="border-b hover:bg-gray-50">
                 <td className="px-4 py-2">
                   <span className={`text-xs px-2 py-1 rounded ${e.type === "depense" ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}`}>
@@ -163,6 +167,15 @@ export default function CaisseCard() {
           </tbody>
         </table>
         {entries.length === 0 && <p className="text-gray-400 text-sm text-center mb-6">Aucune entrée manuelle</p>}
+        {Math.ceil(entries.length / entriesPerPage) > 1 && (
+          <div className="flex justify-center space-x-2 mb-6">
+            {Array.from({ length: Math.ceil(entries.length / entriesPerPage) }, (_, i) => (
+              <button key={i + 1} onClick={() => setCaissePage(i + 1)} className={`px-3 py-1 rounded text-sm ${caissePage === i + 1 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}>
+                {i + 1}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

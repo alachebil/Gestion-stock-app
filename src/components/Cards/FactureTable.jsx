@@ -14,6 +14,8 @@ export default function FactureTable() {
   const [editForm, setEditForm] = useState({});
   const [sortField, setSortField] = useState(null);
   const [sortOrder, setSortOrder] = useState("asc");
+  const [searchFournisseur, setSearchFournisseur] = useState("");
+  const [searchDate, setSearchDate] = useState("");
   const [form, setForm] = useState({
     nomFournisseur: "",
     numTelephone: "",
@@ -255,7 +257,13 @@ export default function FactureTable() {
   const sortIcon = (field) =>
     sortField === field ? (sortOrder === "asc" ? " ↑" : " ↓") : " ↕";
 
-  const sortedFactures = [...factures].sort((a, b) => {
+  const sortedFactures = [...factures]
+    .filter((f) => {
+      const matchFournisseur = !searchFournisseur || f.nomFournisseur.toLowerCase().includes(searchFournisseur.toLowerCase());
+      const matchDate = !searchDate || (f.dateLivraison && f.dateLivraison.split("T")[0] === searchDate);
+      return matchFournisseur && matchDate;
+    })
+    .sort((a, b) => {
     if (!sortField) return 0;
     let valA = a[sortField];
     let valB = b[sortField];
@@ -274,7 +282,7 @@ export default function FactureTable() {
   const indexOfLast = currentPage * facturesPerPage;
   const indexOfFirst = indexOfLast - facturesPerPage;
   const currentFactures = sortedFactures.slice(indexOfFirst, indexOfLast);
-  const totalPages = Math.ceil(factures.length / facturesPerPage);
+  const totalPages = Math.ceil(sortedFactures.length / facturesPerPage);
 
   return (
     <>
@@ -332,9 +340,11 @@ export default function FactureTable() {
             placeholder="Quantite (kg)"
             required
             value={form.quantitePortee}
-            onChange={(e) =>
-              setForm({ ...form, quantitePortee: e.target.value })
-            }
+            onChange={(e) => {
+              const qty = e.target.value;
+              const total = qty && form.prixUnite ? (Number(qty) * Number(form.prixUnite)).toFixed(2) : form.prixTotal;
+              setForm({ ...form, quantitePortee: qty, prixTotal: total });
+            }}
           />
           <input
             className="border rounded px-3 py-2 text-sm w-28 bg-gray-600 text-white placeholder-gray-400"
@@ -344,7 +354,7 @@ export default function FactureTable() {
             placeholder="Prix Total"
             required
             value={form.prixTotal}
-            onChange={(e) => setForm({ ...form, prixTotal: e.target.value })}
+            readOnly
           />
           <input
             className="border rounded px-3 py-2 text-sm w-28 bg-gray-600 text-white placeholder-gray-400"
@@ -354,7 +364,11 @@ export default function FactureTable() {
             placeholder="Prix Unitaire"
             required
             value={form.prixUnite}
-            onChange={(e) => setForm({ ...form, prixUnite: e.target.value })}
+            onChange={(e) => {
+              const pu = e.target.value;
+              const total = form.quantitePortee && pu ? (Number(form.quantitePortee) * Number(pu)).toFixed(2) : form.prixTotal;
+              setForm({ ...form, prixUnite: pu, prixTotal: total });
+            }}
           />
           <input
             className="border rounded px-3 py-2 text-sm w-32 bg-gray-600 text-white placeholder-gray-400"
@@ -383,6 +397,30 @@ export default function FactureTable() {
             Ajouter
           </button>
         </form>
+
+        {/* Search filters */}
+        <div className="flex flex-wrap gap-3 px-6 py-3 items-center bg-gray-700">
+          <input
+            className="border rounded px-3 py-2 text-sm bg-gray-600 text-white placeholder-gray-400"
+            placeholder="Rechercher par fournisseur..."
+            value={searchFournisseur}
+            onChange={(e) => { setSearchFournisseur(e.target.value); setCurrentPage(1); }}
+          />
+          <input
+            className="border rounded px-3 py-2 text-sm bg-gray-600 text-white"
+            type="date"
+            value={searchDate}
+            onChange={(e) => { setSearchDate(e.target.value); setCurrentPage(1); }}
+          />
+          {(searchFournisseur || searchDate) && (
+            <button
+              className="bg-gray-500 text-white px-3 py-2 rounded text-sm hover:bg-gray-400"
+              onClick={() => { setSearchFournisseur(""); setSearchDate(""); setCurrentPage(1); }}
+            >
+              Réinitialiser
+            </button>
+          )}
+        </div>
 
         <div className="block w-full overflow-x-auto">
           <table className="items-center w-full bg-transparent border-collapse">
@@ -525,9 +563,17 @@ export default function FactureTable() {
               <input className="border rounded px-3 py-2 text-sm w-full bg-gray-600 text-white" placeholder="Nom Fournisseur" required value={editForm.nomFournisseur} onChange={(e) => setEditForm({ ...editForm, nomFournisseur: e.target.value })} />
               <input className="border rounded px-3 py-2 text-sm w-full bg-gray-600 text-white" placeholder="Num Telephone" required value={editForm.numTelephone} onChange={(e) => setEditForm({ ...editForm, numTelephone: e.target.value })} />
               <input className="border rounded px-3 py-2 text-sm w-full bg-gray-600 text-white" placeholder="Ref Matiere Premiere" required value={editForm.refMatierePremiere} onChange={(e) => setEditForm({ ...editForm, refMatierePremiere: e.target.value })} />
-              <input className="border rounded px-3 py-2 text-sm w-full bg-gray-600 text-white" type="number" min="0" step="0.01" placeholder="Quantite (kg)" required value={editForm.quantitePortee} onChange={(e) => setEditForm({ ...editForm, quantitePortee: e.target.value })} />
-              <input className="border rounded px-3 py-2 text-sm w-full bg-gray-600 text-white" type="number" min="0" step="0.01" placeholder="Prix Total" required value={editForm.prixTotal} onChange={(e) => setEditForm({ ...editForm, prixTotal: e.target.value })} />
-              <input className="border rounded px-3 py-2 text-sm w-full bg-gray-600 text-white" type="number" min="0" step="0.01" placeholder="Prix Unitaire" required value={editForm.prixUnite} onChange={(e) => setEditForm({ ...editForm, prixUnite: e.target.value })} />
+              <input className="border rounded px-3 py-2 text-sm w-full bg-gray-600 text-white" type="number" min="0" step="0.01" placeholder="Quantite (kg)" required value={editForm.quantitePortee} onChange={(e) => {
+                const qty = e.target.value;
+                const total = qty && editForm.prixUnite ? (Number(qty) * Number(editForm.prixUnite)).toFixed(2) : editForm.prixTotal;
+                setEditForm({ ...editForm, quantitePortee: qty, prixTotal: total });
+              }} />
+              <input className="border rounded px-3 py-2 text-sm w-full bg-gray-600 text-white" type="number" min="0" step="0.01" placeholder="Prix Total" required value={editForm.prixTotal} readOnly />
+              <input className="border rounded px-3 py-2 text-sm w-full bg-gray-600 text-white" type="number" min="0" step="0.01" placeholder="Prix Unitaire" required value={editForm.prixUnite} onChange={(e) => {
+                const pu = e.target.value;
+                const total = editForm.quantitePortee && pu ? (Number(editForm.quantitePortee) * Number(pu)).toFixed(2) : editForm.prixTotal;
+                setEditForm({ ...editForm, prixUnite: pu, prixTotal: total });
+              }} />
               <input className="border rounded px-3 py-2 text-sm w-full bg-gray-600 text-white" type="number" min="0" step="0.01" placeholder="Prix Diversé (Payé)" required value={editForm.prixDiverse} onChange={(e) => setEditForm({ ...editForm, prixDiverse: e.target.value })} />
               <input className="border rounded px-3 py-2 text-sm w-full bg-gray-600 text-white" type="date" required value={editForm.dateLivraison} onChange={(e) => setEditForm({ ...editForm, dateLivraison: e.target.value })} />
               <div className="flex justify-end gap-3 pt-2">

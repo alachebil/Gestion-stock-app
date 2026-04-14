@@ -17,6 +17,12 @@ export default function ClientCard() {
   const [ventesLoading, setVentesLoading] = useState(false);
   const [venteSearch, setVenteSearch] = useState("");
 
+  // Pagination
+  const clientsPerPage = 10;
+  const [clientPage, setClientPage] = useState(1);
+  const ventesPerPage = 5;
+  const [ventePage, setVentePage] = useState(1);
+
   const fetchClients = async () => {
     setLoading(true);
     try {
@@ -68,6 +74,8 @@ export default function ClientCard() {
   const viewVentes = async (client) => {
     setSelectedClient(client);
     setVentesLoading(true);
+    setVentePage(1);
+    setVenteSearch("");
     try {
       const res = await axios.get(`${API}/${client._id}/ventes`);
       setClientVentes(res.data);
@@ -83,6 +91,9 @@ export default function ClientCard() {
       c.telephone.includes(search) ||
       c.adresse.toLowerCase().includes(search.toLowerCase())
   );
+
+  const clientTotalPages = Math.ceil(filteredClients.length / clientsPerPage);
+  const paginatedClients = filteredClients.slice((clientPage - 1) * clientsPerPage, clientPage * clientsPerPage);
 
   const filteredVentes = clientVentes.filter(
     (v) =>
@@ -121,7 +132,7 @@ export default function ClientCard() {
             </tr>
           </thead>
           <tbody>
-            {filteredClients.map((c) => (
+            {paginatedClients.map((c) => (
               <tr key={c._id} className={`border-b hover:bg-gray-50 ${selectedClient?._id === c._id ? "bg-indigo-50" : ""}`}>
                 <td className="px-4 py-2 font-semibold">{c.nom}</td>
                 <td className="px-4 py-2">{c.telephone}</td>
@@ -136,6 +147,15 @@ export default function ClientCard() {
           </tbody>
         </table>
         {filteredClients.length === 0 && <p className="text-gray-400 text-sm text-center mt-4">Aucun client trouvé</p>}
+        {clientTotalPages > 1 && (
+          <div className="flex justify-center space-x-2 mt-4">
+            {Array.from({ length: clientTotalPages }, (_, i) => (
+              <button key={i + 1} onClick={() => setClientPage(i + 1)} className={`px-3 py-1 rounded text-sm ${clientPage === i + 1 ? "bg-indigo-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}>
+                {i + 1}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Ventes History Panel */}
         {selectedClient && (
@@ -144,14 +164,15 @@ export default function ClientCard() {
               <h4 className="font-bold text-gray-700"><i className="fas fa-receipt mr-2"></i>Historique des achats: {selectedClient.nom}</h4>
               <button onClick={() => { setSelectedClient(null); setClientVentes([]); }} className="text-gray-400 hover:text-gray-600 text-sm"><i className="fas fa-times"></i></button>
             </div>
-            <input className="border rounded px-3 py-2 text-sm mb-3 w-full" placeholder="Rechercher par date, chauffeur, matriculation, source..." value={venteSearch} onChange={(e) => setVenteSearch(e.target.value)} />
+            <input className="border rounded px-3 py-2 text-sm mb-3 w-full" placeholder="Rechercher par date, chauffeur, matriculation, source..." value={venteSearch} onChange={(e) => { setVenteSearch(e.target.value); setVentePage(1); }} />
             {ventesLoading ? (
               <p className="text-gray-400 text-sm">Chargement...</p>
             ) : filteredVentes.length === 0 ? (
               <p className="text-gray-400 text-sm text-center">Aucun achat trouvé</p>
             ) : (
+              <>
               <div className="space-y-3">
-                {filteredVentes.map((v) => (
+                {filteredVentes.slice((ventePage - 1) * ventesPerPage, ventePage * ventesPerPage).map((v) => (
                   <div key={v._id} className="bg-gray-50 border rounded p-3">
                     <div className="flex justify-between text-sm mb-2">
                       <span className="font-semibold">{new Date(v.dateVente).toLocaleDateString("fr-FR")} à {new Date(v.dateVente).toLocaleTimeString("fr-FR")}</span>
@@ -167,6 +188,16 @@ export default function ClientCard() {
                   </div>
                 ))}
               </div>
+              {Math.ceil(filteredVentes.length / ventesPerPage) > 1 && (
+                <div className="flex justify-center space-x-2 mt-3">
+                  {Array.from({ length: Math.ceil(filteredVentes.length / ventesPerPage) }, (_, i) => (
+                    <button key={i + 1} onClick={() => setVentePage(i + 1)} className={`px-3 py-1 rounded text-sm ${ventePage === i + 1 ? "bg-indigo-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}>
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+              )}
+              </>
             )}
           </div>
         )}

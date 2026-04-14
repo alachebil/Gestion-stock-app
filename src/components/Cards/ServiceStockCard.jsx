@@ -31,6 +31,11 @@ export default function ServiceStockCard() {
   const [editingItem, setEditingItem] = useState(null);
   const [editForm, setEditForm] = useState({});
 
+  // Pagination
+  const itemsPerPage = 10;
+  const [semiPage, setSemiPage] = useState(1);
+  const [finalPage, setFinalPage] = useState(1);
+
   // Vente states
   const [selectedIds, setSelectedIds] = useState([]);
   const [showVentePopup, setShowVentePopup] = useState(false);
@@ -297,6 +302,26 @@ export default function ServiceStockCard() {
     finalSortOrder
   );
 
+  // Pagination helpers
+  const paginatedSemiPrets = filteredSemiPrets.slice((semiPage - 1) * itemsPerPage, semiPage * itemsPerPage);
+  const semiTotalPages = Math.ceil(filteredSemiPrets.length / itemsPerPage);
+
+  const paginatedFinals = filteredFinals.slice((finalPage - 1) * itemsPerPage, finalPage * itemsPerPage);
+  const finalTotalPages = Math.ceil(filteredFinals.length / itemsPerPage);
+
+  const PaginationBar = ({ currentPage, totalPages, setPage }) => {
+    if (totalPages <= 1) return null;
+    return (
+      <div className="flex justify-center space-x-2 mt-4">
+        {Array.from({ length: totalPages }, (_, i) => (
+          <button key={i + 1} onClick={() => setPage(i + 1)} className={`px-3 py-1 rounded text-sm ${currentPage === i + 1 ? "bg-purple-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}>
+            {i + 1}
+          </button>
+        ))}
+      </div>
+    );
+  };
+
   const generateStockPDF = () => {
     const doc = new jsPDF();
 
@@ -428,7 +453,7 @@ export default function ServiceStockCard() {
             <table className="w-full text-sm text-left">
               <thead className="bg-gray-100"><tr><th className="px-4 py-2">Nom</th><th className="px-4 py-2">Type</th><th className="px-4 py-2 cursor-pointer select-none" onClick={() => toggleSort(semiSortOrder, setSemiSortOrder)}>Quantité (kg) {sortIcon(semiSortOrder)}</th><th className="px-4 py-2">Actions</th></tr></thead>
               <tbody>
-                {filteredSemiPrets.map((s) => (
+                {paginatedSemiPrets.map((s) => (
                   <tr key={s._id} className="border-b hover:bg-gray-50">
                     <td className="px-4 py-2">{s.nom}</td>
                     <td className="px-4 py-2"><span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">{s.type}</span></td>
@@ -442,6 +467,7 @@ export default function ServiceStockCard() {
               </tbody>
             </table>
             {filteredSemiPrets.length === 0 && <p className="text-gray-400 text-sm text-center mt-4">Aucun produit semi-prêt trouvé</p>}
+            <PaginationBar currentPage={semiPage} totalPages={semiTotalPages} setPage={setSemiPage} />
           </div>
         )}
 
@@ -487,7 +513,7 @@ export default function ServiceStockCard() {
             <table className="w-full text-sm text-left">
               <thead className="bg-gray-100"><tr><th className="px-4 py-2"><input type="checkbox" onChange={selectAllDispo} checked={filteredFinals.filter(f => f.etat === "dispo").length > 0 && filteredFinals.filter(f => f.etat === "dispo").every(f => selectedIds.includes(f._id))} /></th><th className="px-4 py-2">Nom</th><th className="px-4 py-2">Type</th><th className="px-4 py-2 cursor-pointer select-none" onClick={() => toggleSort(finalSortOrder, setFinalSortOrder)}>Quantité (kg) {sortIcon(finalSortOrder)}</th><th className="px-4 py-2">État</th><th className="px-4 py-2">Actions</th></tr></thead>
               <tbody>
-                {filteredFinals.map((f) => (
+                {paginatedFinals.map((f) => (
                   <tr key={f._id} className={`border-b hover:bg-gray-50 ${selectedIds.includes(f._id) ? "bg-pink-50" : ""}`}>
                     <td className="px-4 py-2">
                       {f.etat === "dispo" && (
@@ -498,12 +524,11 @@ export default function ServiceStockCard() {
                     <td className="px-4 py-2"><span className="bg-pink-100 text-pink-800 text-xs px-2 py-1 rounded">{f.type}</span></td>
                     <td className="px-4 py-2 font-semibold">{f.quantiteKg}</td>
                     <td className="px-4 py-2">
-                      <button
-                        className={`w-24 px-3 py-1 rounded-full text-white text-xs font-bold ${f.etat === "vendu" ? "bg-red-500 hover:bg-red-600" : "bg-green-500 hover:bg-green-600"}`}
-                        onClick={() => toggleEtat(f._id)}
+                      <span
+                        className={`w-24 inline-block text-center px-3 py-1 rounded-full text-white text-xs font-bold ${f.etat === "vendu" ? "bg-red-500" : "bg-green-500"}`}
                       >
                         {f.etat === "vendu" ? "Vendu" : "Dispo"}
-                      </button>
+                      </span>
                     </td>
                     <td className="px-4 py-2">
                       <button onClick={() => startEdit("final", f)} className="text-blue-500 hover:text-blue-700 text-xs mr-2"><i className="fas fa-edit"></i></button>
@@ -514,6 +539,7 @@ export default function ServiceStockCard() {
               </tbody>
             </table>
             {filteredFinals.length === 0 && <p className="text-gray-400 text-sm text-center mt-4">Aucun produit final trouvé</p>}
+            <PaginationBar currentPage={finalPage} totalPages={finalTotalPages} setPage={setFinalPage} />
           </div>
         )}
       </div>

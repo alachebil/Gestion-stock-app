@@ -11,6 +11,8 @@ export default function Dashboard() {
   const [transformations, setTransformations] = useState([]);
   const [historyPage, setHistoryPage] = useState(1);
   const historyPerPage = 10;
+  const [historyDateSearch, setHistoryDateSearch] = useState("");
+  const [historyDateSort, setHistoryDateSort] = useState("desc");
 
   useEffect(() => {
     if (!user) navigate("/auth/login");
@@ -77,8 +79,20 @@ export default function Dashboard() {
     }
   };
 
-  const historyTotalPages = Math.ceil(transformations.length / historyPerPage);
-  const paginatedTransformations = transformations.slice(
+  const filteredTransformations = transformations
+    .filter((t) => {
+      if (!historyDateSearch) return true;
+      return new Date(t.dateTransformation).toLocaleDateString("fr-FR").includes(historyDateSearch) ||
+        new Date(t.dateTransformation).toISOString().split("T")[0] === historyDateSearch;
+    })
+    .sort((a, b) => {
+      const dA = new Date(a.dateTransformation);
+      const dB = new Date(b.dateTransformation);
+      return historyDateSort === "asc" ? dA - dB : dB - dA;
+    });
+
+  const historyTotalPages = Math.ceil(filteredTransformations.length / historyPerPage);
+  const paginatedTransformations = filteredTransformations.slice(
     (historyPage - 1) * historyPerPage,
     historyPage * historyPerPage
   );
@@ -154,6 +168,24 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Search & Sort for Transformations */}
+      <div className="flex flex-wrap gap-3 px-6 py-3 items-center">
+        <input
+          className="border rounded px-3 py-2 text-sm bg-gray-700 text-white placeholder-gray-400"
+          type="text"
+          placeholder="Rechercher par date (ex: 14/04/2026 ou 2026-04-14)"
+          value={historyDateSearch}
+          onChange={(e) => { setHistoryDateSearch(e.target.value); setHistoryPage(1); }}
+        />
+        <button
+          className="bg-gray-600 text-white px-3 py-2 rounded text-sm hover:bg-gray-500"
+          onClick={() => setHistoryDateSort(historyDateSort === "asc" ? "desc" : "asc")}
+        >
+          Date {historyDateSort === "asc" ? "↑" : "↓"}
+        </button>
+      </div>
+
       <div className="block w-full overflow-x-auto">
         <table className="items-center w-full bg-transparent border-collapse">
           <thead>
@@ -179,7 +211,7 @@ export default function Dashboard() {
             </tr>
           </thead>
           <tbody>
-            {transformations.length === 0 ? (
+            {filteredTransformations.length === 0 ? (
               <tr>
                 <td colSpan="6" className="text-center text-gray-400 py-6">
                   Aucune transformation enregistrée
