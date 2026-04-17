@@ -45,6 +45,16 @@ export default function ServiceStockCard() {
   const [prixKgBargatere, setPrixKgBargatere] = useState("");
   const [chauffeur, setChauffeur] = useState("");
   const [matriculation, setMatriculation] = useState("");
+  const [montantPaye, setMontantPaye] = useState("");
+
+  // Demo states
+  const [showDemoPopup, setShowDemoPopup] = useState(false);
+  const [demoProducts, setDemoProducts] = useState([]);
+  const [demoPrixKgBase, setDemoPrixKgBase] = useState("");
+  const [demoPrixKgBargatere, setDemoPrixKgBargatere] = useState("");
+  const [demoChauffeur, setDemoChauffeur] = useState("");
+  const [demoMatriculation, setDemoMatriculation] = useState("");
+  const [demoSelectedClientId, setDemoSelectedClientId] = useState("");
 
   const fetchAll = async () => {
     setLoading(true);
@@ -157,7 +167,23 @@ export default function ServiceStockCard() {
       const res = await axios.get(CLIENT_API);
       setClients(res.data);
     } catch { /* ignore */ }
+    setMontantPaye("");
     setShowVentePopup(true);
+  };
+
+  const openDemoPopup = async () => {
+    if (selectedIds.length === 0) { alert("Sélectionnez au moins un produit"); return; }
+    try {
+      const res = await axios.get(CLIENT_API);
+      setClients(res.data);
+    } catch { /* ignore */ }
+    setDemoProducts(finals.filter((f) => selectedIds.includes(f._id)).map((p) => ({ ...p, demoQuantiteKg: p.quantiteKg })));
+    setDemoPrixKgBase("");
+    setDemoPrixKgBargatere("");
+    setDemoChauffeur("");
+    setDemoMatriculation("");
+    setDemoSelectedClientId("");
+    setShowDemoPopup(true);
   };
 
   const selectedProducts = finals.filter((f) => selectedIds.includes(f._id));
@@ -179,13 +205,20 @@ export default function ServiceStockCard() {
     const doc = new jsPDF();
     doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
-    doc.text("RPL industrie", 105, 18, { align: "center" });
-    doc.setFontSize(14);
-    doc.text("Bon de Vente (Service)", 105, 28, { align: "center" });
+    doc.text("Sté RPL industrie", 10, 18, { align: "left" });
+    doc.setFontSize(7);
+    doc.text("Z.I : Avenue.Janvier 1952 Téboulba", 10, 23, { align: "left" });
+    doc.setFontSize(7);
+    doc.text("Tél: 29 501 019", 10, 28, { align: "left" });
+    doc.setFontSize(7);
+    doc.text("T.V.A: 1978076 L/A/M/000", 10, 33, { align: "left" });
+    doc.setFontSize(20);
+    const pageWidth = doc.internal.pageSize.getWidth();
+    doc.text("Bon de Livraison", pageWidth - 10, 18, { align: "right" });
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text(`Date: ${new Date(vente.dateVente).toLocaleString("fr-FR")}`, 20, 38);
-    doc.setDrawColor(156, 39, 176);
+    doc.text(`Date: ${new Date(vente.dateVente).toLocaleDateString("fr-FR")} , Téboulba`, 20, 38);
+    doc.setDrawColor(41, 128, 185);
     doc.setLineWidth(0.5);
     doc.line(20, 42, 190, 42);
 
@@ -198,7 +231,7 @@ export default function ServiceStockCard() {
     doc.setFont("helvetica", "bold");
     doc.text("Chauffeur:", 20, y);
     doc.setFont("helvetica", "normal");
-    doc.text(`${vente.chauffeur}  |  Matriculation: ${vente.matriculation}`, 50, y);
+    doc.text(`${vente.chauffeur}  |  Immatriculation: ${vente.matriculation}`, 50, y);
     y += 12;
 
     doc.setFont("helvetica", "bold");
@@ -227,9 +260,54 @@ export default function ServiceStockCard() {
 
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
-    doc.text(`Total Général: ${vente.totalGeneral.toFixed(2)} TND`, 20, y);
+    doc.text(`Montant TOTAL: ${vente.totalGeneral.toFixed(2)} TND`, 20, y);
 
     doc.save(`bon_de_vente_service_${clientObj.nom}_${new Date().toISOString().split("T")[0]}.pdf`);
+  };
+
+  // Demo grouped/total helpers
+  const demoGroupedSelected = demoProducts.reduce((acc, p) => {
+    if (!acc[p.type]) acc[p.type] = { totalKg: 0, count: 0 };
+    acc[p.type].totalKg += Number(p.demoQuantiteKg) || 0;
+    acc[p.type].count += 1;
+    return acc;
+  }, {});
+
+  const calcDemoTotal = () => {
+    let total = 0;
+    if (demoGroupedSelected.base && demoPrixKgBase) total += demoGroupedSelected.base.totalKg * Number(demoPrixKgBase);
+    if (demoGroupedSelected.bargatere && demoPrixKgBargatere) total += demoGroupedSelected.bargatere.totalKg * Number(demoPrixKgBargatere);
+    return total;
+  };
+
+  const updateDemoQuantity = (id, val) => {
+    setDemoProducts((prev) => prev.map((p) => p._id === id ? { ...p, demoQuantiteKg: val } : p));
+  };
+
+  const handleSubmitDemo = () => {
+    if (!demoSelectedClientId) { alert("Sélectionnez un client"); return; }
+    if (!demoChauffeur || !demoMatriculation) { alert("Remplissez chauffeur et immatriculation"); return; }
+    const clientObj = clients.find((c) => c._id === demoSelectedClientId);
+    const prixParTypeData = [];
+    if (demoGroupedSelected.base) {
+      if (!demoPrixKgBase || Number(demoPrixKgBase) <= 0) { alert("Entrez un prix/kg pour le type Base"); return; }
+      prixParTypeData.push({ type: "base", totalKg: demoGroupedSelected.base.totalKg, prixKg: Number(demoPrixKgBase), sousTotal: demoGroupedSelected.base.totalKg * Number(demoPrixKgBase) });
+    }
+    if (demoGroupedSelected.bargatere) {
+      if (!demoPrixKgBargatere || Number(demoPrixKgBargatere) <= 0) { alert("Entrez un prix/kg pour le type Bargatère"); return; }
+      prixParTypeData.push({ type: "bargatere", totalKg: demoGroupedSelected.bargatere.totalKg, prixKg: Number(demoPrixKgBargatere), sousTotal: demoGroupedSelected.bargatere.totalKg * Number(demoPrixKgBargatere) });
+    }
+    const demoVente = {
+      dateVente: new Date(),
+      chauffeur: demoChauffeur,
+      matriculation: demoMatriculation,
+      produits: demoProducts.map((p) => ({ nom: p.nom, type: p.type, quantiteKg: Number(p.demoQuantiteKg) || 0 })),
+      prixParType: prixParTypeData,
+      totalGeneral: calcDemoTotal(),
+    };
+    generateVentePDF(demoVente, clientObj);
+    setShowDemoPopup(false);
+    setSelectedIds([]);
   };
 
   const handleSubmitVente = async () => {
@@ -244,6 +322,7 @@ export default function ServiceStockCard() {
       if (!prixKgBargatere || Number(prixKgBargatere) <= 0) { alert("Entrez un prix/kg pour le type Bargatère"); return; }
       prixParType.push({ type: "bargatere", prixKg: Number(prixKgBargatere) });
     }
+    const montantPayeVal = montantPaye ? Number(montantPaye) : null;
     try {
       const res = await axios.post(VENTE_API, {
         clientId: selectedClientId,
@@ -252,6 +331,7 @@ export default function ServiceStockCard() {
         chauffeur,
         matriculation,
         source: "service",
+        ...(montantPayeVal !== null && { montantPaye: montantPayeVal }),
       });
       const clientObj = clients.find((c) => c._id === selectedClientId);
       generateVentePDF(res.data, clientObj);
@@ -262,6 +342,7 @@ export default function ServiceStockCard() {
       setPrixKgBargatere("");
       setChauffeur("");
       setMatriculation("");
+      setMontantPaye("");
       fetchAll();
     } catch (err) {
       alert(err.response?.data?.message || "Erreur lors de la vente");
@@ -477,12 +558,20 @@ export default function ServiceStockCard() {
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-gray-700">Produit Final</h3>
               {selectedIds.length > 0 && (
-                <button
-                  onClick={openVentePopup}
-                  className="bg-pink-600 text-white px-4 py-2 rounded text-sm hover:bg-pink-700 flex items-center gap-2"
-                >
-                  <i className="fas fa-shopping-cart"></i> Vendre ({selectedIds.length})
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={openVentePopup}
+                    className="bg-pink-600 text-white px-4 py-2 rounded text-sm hover:bg-pink-700 flex items-center gap-2"
+                  >
+                    <i className="fas fa-shopping-cart"></i> Vendre ({selectedIds.length})
+                  </button>
+                  <button
+                    onClick={openDemoPopup}
+                    className="bg-orange-500 text-white px-4 py-2 rounded text-sm hover:bg-orange-600 flex items-center gap-2"
+                  >
+                    <i className="fas fa-file-pdf"></i> Demo ({selectedIds.length})
+                  </button>
+                </div>
               )}
             </div>
             <div className="flex flex-wrap gap-3 mb-4 items-center">
@@ -576,6 +665,80 @@ export default function ServiceStockCard() {
       )}
 
       {/* Vente Popup */}
+      {/* Demo Popup */}
+      {showDemoPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl shadow-xl max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-bold text-gray-700 mb-4"><i className="fas fa-file-pdf mr-2"></i>Demo — Génération PDF uniquement</h3>
+
+            {/* Client */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-600 mb-1">Client</label>
+              <select className="border rounded px-3 py-2 text-sm w-full" value={demoSelectedClientId} onChange={(e) => setDemoSelectedClientId(e.target.value)}>
+                <option value="">-- Sélectionner un client --</option>
+                {clients.map((c) => (<option key={c._id} value={c._id}>{c.nom} - {c.telephone}</option>))}
+              </select>
+            </div>
+
+            {/* Products with editable quantities */}
+            <div className="mb-4 bg-gray-50 rounded p-3">
+              <h4 className="font-semibold text-sm text-gray-700 mb-2">Produits sélectionnés ({demoProducts.length}) — quantités modifiables</h4>
+              <div className="max-h-48 overflow-y-auto space-y-2">
+                {demoProducts.map((p) => (
+                  <div key={p._id} className="flex justify-between items-center text-xs py-1 border-b">
+                    <span>{p.nom} <span className="bg-pink-100 text-pink-800 px-2 py-0.5 rounded ml-1">{p.type}</span></span>
+                    <input className="border rounded px-2 py-1 text-sm w-24 text-right" type="number" min="0.01" step="0.01" value={p.demoQuantiteKg} onChange={(e) => updateDemoQuantity(p._id, e.target.value)} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Prix par type */}
+            <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              {demoGroupedSelected.base && (
+                <div className="bg-purple-50 border border-purple-200 rounded p-3">
+                  <h5 className="font-semibold text-purple-800 text-sm mb-1">Base</h5>
+                  <p className="text-xs text-gray-600">{demoGroupedSelected.base.count} produit(s) - {demoGroupedSelected.base.totalKg.toFixed(2)} kg</p>
+                  <input className="border rounded px-3 py-2 text-sm w-full mt-2" type="number" min="0.01" step="0.01" placeholder="Prix / kg (TND)" value={demoPrixKgBase} onChange={(e) => setDemoPrixKgBase(e.target.value)} />
+                  {demoPrixKgBase && <p className="text-xs text-purple-700 mt-1 font-bold">Sous-total: {(demoGroupedSelected.base.totalKg * Number(demoPrixKgBase)).toFixed(2)} TND</p>}
+                </div>
+              )}
+              {demoGroupedSelected.bargatere && (
+                <div className="bg-pink-50 border border-pink-200 rounded p-3">
+                  <h5 className="font-semibold text-pink-800 text-sm mb-1">Bargatère</h5>
+                  <p className="text-xs text-gray-600">{demoGroupedSelected.bargatere.count} produit(s) - {demoGroupedSelected.bargatere.totalKg.toFixed(2)} kg</p>
+                  <input className="border rounded px-3 py-2 text-sm w-full mt-2" type="number" min="0.01" step="0.01" placeholder="Prix / kg (TND)" value={demoPrixKgBargatere} onChange={(e) => setDemoPrixKgBargatere(e.target.value)} />
+                  {demoPrixKgBargatere && <p className="text-xs text-pink-700 mt-1 font-bold">Sous-total: {(demoGroupedSelected.bargatere.totalKg * Number(demoPrixKgBargatere)).toFixed(2)} TND</p>}
+                </div>
+              )}
+            </div>
+
+            {/* Chauffeur / Matriculation */}
+            <div className="mb-4 grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Chauffeur</label>
+                <input className="border rounded px-3 py-2 text-sm w-full" placeholder="Nom du chauffeur" value={demoChauffeur} onChange={(e) => setDemoChauffeur(e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Immatriculation</label>
+                <input className="border rounded px-3 py-2 text-sm w-full" placeholder="Immatriculation véhicule" value={demoMatriculation} onChange={(e) => setDemoMatriculation(e.target.value)} />
+              </div>
+            </div>
+
+            {/* Total */}
+            <div className="mb-4 bg-orange-50 border border-orange-300 rounded p-3 text-center">
+              <span className="text-lg font-bold text-orange-800">Total Général: {calcDemoTotal().toFixed(2)} TND</span>
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setShowDemoPopup(false)} className="px-4 py-2 text-sm bg-gray-300 rounded hover:bg-gray-400">Annuler</button>
+              <button onClick={handleSubmitDemo} className="px-4 py-2 text-sm bg-orange-500 text-white rounded hover:bg-orange-600"><i className="fas fa-file-pdf mr-1"></i>Générer PDF</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showVentePopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-2xl shadow-xl max-h-[90vh] overflow-y-auto">
@@ -630,14 +793,23 @@ export default function ServiceStockCard() {
                 <input className="border rounded px-3 py-2 text-sm w-full" placeholder="Nom du chauffeur" value={chauffeur} onChange={(e) => setChauffeur(e.target.value)} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Matriculation</label>
-                <input className="border rounded px-3 py-2 text-sm w-full" placeholder="Matriculation véhicule" value={matriculation} onChange={(e) => setMatriculation(e.target.value)} />
+                <label className="block text-sm font-medium text-gray-600 mb-1">Immatriculation</label>
+                <input className="border rounded px-3 py-2 text-sm w-full" placeholder="Immatriculation véhicule" value={matriculation} onChange={(e) => setMatriculation(e.target.value)} />
               </div>
             </div>
 
             {/* Total */}
             <div className="mb-4 bg-green-50 border border-green-300 rounded p-3 text-center">
               <span className="text-lg font-bold text-green-800">Total Général: {calcTotal().toFixed(2)} TND</span>
+            </div>
+
+            {/* Montant Payé */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-600 mb-1">Montant Payé (TND) — sera enregistré dans la caisse</label>
+              <input className="border rounded px-3 py-2 text-sm w-full" type="number" min="0" step="0.01" placeholder={`Par défaut: ${calcTotal().toFixed(2)} TND (total)`} value={montantPaye} onChange={(e) => setMontantPaye(e.target.value)} />
+              {montantPaye && Number(montantPaye) < calcTotal() && (
+                <p className="text-xs text-orange-600 mt-1">Reste à payer: {(calcTotal() - Number(montantPaye)).toFixed(2)} TND</p>
+              )}
             </div>
 
             {/* Actions */}

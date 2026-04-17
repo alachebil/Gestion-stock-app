@@ -197,12 +197,19 @@ export default function StockCard() {
     const doc = new jsPDF();
     doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
-    doc.text("RPL industrie", 105, 18, { align: "center" });
-    doc.setFontSize(14);
-    doc.text("Bon de Vente", 105, 28, { align: "center" });
+    doc.text("Sté RPL industrie", 10, 18, { align: "left" });
+    doc.setFontSize(7);
+    doc.text("Z.I : Avenue.Janvier 1952 Téboulba", 10, 23, { align: "left" });
+    doc.setFontSize(7);
+    doc.text("Tél: 29 501 019", 10, 28, { align: "left" });
+    doc.setFontSize(7);
+    doc.text("T.V.A: 1978076 L/A/M/000", 10, 33, { align: "left" });
+    doc.setFontSize(20);
+    const pageWidth = doc.internal.pageSize.getWidth();
+    doc.text("Bon de Livraison", pageWidth - 10, 18, { align: "right" });
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text(`Date: ${new Date(vente.dateVente).toLocaleString("fr-FR")}`, 20, 38);
+    doc.text(`Date: ${new Date(vente.dateVente).toLocaleDateString("fr-FR")} , Téboulba`, 20, 38);
     doc.setDrawColor(41, 128, 185);
     doc.setLineWidth(0.5);
     doc.line(20, 42, 190, 42);
@@ -216,7 +223,7 @@ export default function StockCard() {
     doc.setFont("helvetica", "bold");
     doc.text("Chauffeur:", 20, y);
     doc.setFont("helvetica", "normal");
-    doc.text(`${vente.chauffeur}  |  Matriculation: ${vente.matriculation}`, 50, y);
+    doc.text(`${vente.chauffeur}  |  Immatriculation: ${vente.matriculation}`, 50, y);
     y += 12;
 
     doc.setFont("helvetica", "bold");
@@ -245,7 +252,7 @@ export default function StockCard() {
 
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
-    doc.text(`Total Général: ${vente.totalGeneral.toFixed(2)} TND`, 20, y);
+    doc.text(`Montant TOTAL: ${vente.totalGeneral.toFixed(2)} TND`, 20, y);
 
     doc.save(`bon_de_vente_${clientObj.nom}_${new Date().toISOString().split("T")[0]}.pdf`);
   };
