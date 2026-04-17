@@ -471,7 +471,7 @@ export default function StockCard() {
     autoTable(doc, {
       startY: y,
       head: [["Nom", "Quantite (kg)"]],
-      body: matieres.map((m) => [m.nom, m.quantiteKg]),
+      body: matieres.map((m) => [m.nom, m.quantiteKg.toFixed(1)]),
       theme: "grid",
       headStyles: { fillColor: [41, 128, 185] },
     });
@@ -485,7 +485,7 @@ export default function StockCard() {
     autoTable(doc, {
       startY: y,
       head: [["Nom", "Type", "Quantite (kg)"]],
-      body: semiPrets.map((s) => [s.nom, s.type, s.quantiteKg]),
+      body: semiPrets.map((s) => [s.nom, s.type, s.quantiteKg.toFixed(1)]),
       theme: "grid",
       headStyles: { fillColor: [243, 156, 18] },
     });
@@ -499,7 +499,7 @@ export default function StockCard() {
     autoTable(doc, {
       startY: y,
       head: [["Nom", "Type", "Quantite (kg)"]],
-      body: finals.map((f) => [f.nom, f.type, f.quantiteKg]),
+      body: finals.map((f) => [f.nom, f.type, f.quantiteKg.toFixed(1)]),
       theme: "grid",
       headStyles: { fillColor: [39, 174, 96] },
     });
@@ -554,7 +554,7 @@ export default function StockCard() {
                   summary.matierePremieres.map((m) => (
                     <div key={m._id} className="flex justify-between text-sm py-1">
                       <span className="text-gray-700">{m._id}</span>
-                      <span className="font-bold text-blue-700">{m.totalKg} kg ({m.count} entrées)</span>
+                      <span className="font-bold text-blue-700">{m.totalKg.toFixed(1)} kg ({m.count} entrées)</span>
                     </div>
                   ))
                 )}
@@ -568,7 +568,7 @@ export default function StockCard() {
                   summary.produitsSemiPrets.map((s) => (
                     <div key={s._id} className="flex justify-between text-sm py-1">
                       <span className="text-gray-700">{s._id}</span>
-                      <span className="font-bold text-yellow-700">{s.totalKg} kg ({s.count} entrées)</span>
+                      <span className="font-bold text-yellow-700">{s.totalKg.toFixed(1)} kg ({s.count} entrées)</span>
                     </div>
                   ))
                 )}
@@ -582,7 +582,7 @@ export default function StockCard() {
                   summary.produitsFinals.map((f) => (
                     <div key={f._id} className="flex justify-between text-sm py-1">
                       <span className="text-gray-700">{f._id}</span>
-                      <span className="font-bold text-green-700">{f.totalKg} kg ({f.count} entrées)</span>
+                      <span className="font-bold text-green-700">{f.totalKg.toFixed(1)} kg ({f.count} entrées)</span>
                     </div>
                   ))
                 )}
@@ -908,8 +908,8 @@ export default function StockCard() {
                 <input className="border rounded px-3 py-2 text-sm w-full" placeholder="Nom du chauffeur" value={chauffeur} onChange={(e) => setChauffeur(e.target.value)} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Matriculation</label>
-                <input className="border rounded px-3 py-2 text-sm w-full" placeholder="Matriculation véhicule" value={matriculation} onChange={(e) => setMatriculation(e.target.value)} />
+                <label className="block text-sm font-medium text-gray-600 mb-1">Immatriculation</label>
+                <input className="border rounded px-3 py-2 text-sm w-full" placeholder="Immatriculation véhicule" value={matriculation} onChange={(e) => setMatriculation(e.target.value)} />
               </div>
             </div>
 

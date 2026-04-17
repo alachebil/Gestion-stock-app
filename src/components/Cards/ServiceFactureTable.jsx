@@ -14,6 +14,8 @@ export default function ServiceFactureTable() {
   const [editForm, setEditForm] = useState({});
   const [sortField, setSortField] = useState(null);
   const [sortOrder, setSortOrder] = useState("asc");
+  const [searchFournisseur, setSearchFournisseur] = useState("");
+  const [searchDate, setSearchDate] = useState("");
   const [form, setForm] = useState({
     nomFournisseur: "",
     numTelephone: "",
@@ -251,26 +253,32 @@ export default function ServiceFactureTable() {
   const sortIcon = (field) =>
     sortField === field ? (sortOrder === "asc" ? " ↑" : " ↓") : " ↕";
 
-  const sortedFactures = [...factures].sort((a, b) => {
-    if (!sortField) return 0;
-    let valA = a[sortField];
-    let valB = b[sortField];
-    if (sortField === "dateLivraison") {
-      valA = new Date(valA);
-      valB = new Date(valB);
-    } else {
-      valA = Number(valA) || 0;
-      valB = Number(valB) || 0;
-    }
-    if (valA < valB) return sortOrder === "asc" ? -1 : 1;
-    if (valA > valB) return sortOrder === "asc" ? 1 : -1;
-    return 0;
-  });
+  const sortedFactures = [...factures]
+    .filter((f) => {
+      const matchFournisseur = !searchFournisseur || f.nomFournisseur.toLowerCase().includes(searchFournisseur.toLowerCase());
+      const matchDate = !searchDate || (f.dateLivraison && f.dateLivraison.split("T")[0] === searchDate);
+      return matchFournisseur && matchDate;
+    })
+    .sort((a, b) => {
+      if (!sortField) return 0;
+      let valA = a[sortField];
+      let valB = b[sortField];
+      if (sortField === "dateLivraison") {
+        valA = new Date(valA);
+        valB = new Date(valB);
+      } else {
+        valA = Number(valA) || 0;
+        valB = Number(valB) || 0;
+      }
+      if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+      if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
 
   const indexOfLast = currentPage * facturesPerPage;
   const indexOfFirst = indexOfLast - facturesPerPage;
   const currentFactures = sortedFactures.slice(indexOfFirst, indexOfLast);
-  const totalPages = Math.ceil(factures.length / facturesPerPage);
+  const totalPages = Math.ceil(sortedFactures.length / facturesPerPage);
 
   return (
     <>
@@ -384,6 +392,30 @@ export default function ServiceFactureTable() {
             Ajouter
           </button>
         </form>
+
+        {/* Search filters */}
+        <div className="flex flex-wrap gap-3 px-6 py-3 items-center bg-gray-700">
+          <input
+            className="border rounded px-3 py-2 text-sm bg-gray-600 text-white placeholder-gray-400"
+            placeholder="Rechercher par fournisseur..."
+            value={searchFournisseur}
+            onChange={(e) => { setSearchFournisseur(e.target.value); setCurrentPage(1); }}
+          />
+          <input
+            className="border rounded px-3 py-2 text-sm bg-gray-600 text-white"
+            type="date"
+            value={searchDate}
+            onChange={(e) => { setSearchDate(e.target.value); setCurrentPage(1); }}
+          />
+          {(searchFournisseur || searchDate) && (
+            <button
+              className="bg-gray-500 text-white px-3 py-2 rounded text-sm hover:bg-gray-400"
+              onClick={() => { setSearchFournisseur(""); setSearchDate(""); setCurrentPage(1); }}
+            >
+              Réinitialiser
+            </button>
+          )}
+        </div>
 
         <div className="block w-full overflow-x-auto">
           <table className="items-center w-full bg-transparent border-collapse">

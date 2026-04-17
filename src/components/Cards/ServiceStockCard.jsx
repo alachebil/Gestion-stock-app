@@ -437,7 +437,7 @@ export default function ServiceStockCard() {
     autoTable(doc, {
       startY: y,
       head: [["Nom", "Type", "Quantite (kg)"]],
-      body: semiPrets.map((s) => [s.nom, s.type, s.quantiteKg]),
+      body: semiPrets.map((s) => [s.nom, s.type, s.quantiteKg.toFixed(1)]),
       theme: "grid",
       headStyles: { fillColor: [156, 39, 176] },
     });
@@ -502,7 +502,7 @@ export default function ServiceStockCard() {
                   summary.produitsSemiPrets.map((s) => (
                     <div key={s._id} className="flex justify-between text-sm py-1">
                       <span className="text-gray-700">{s._id}</span>
-                      <span className="font-bold text-purple-700">{s.totalKg} kg ({s.count} entrées)</span>
+                      <span className="font-bold text-purple-700">{s.totalKg.toFixed(1)} kg ({s.count} entrées)</span>
                     </div>
                   ))
                 )}
@@ -515,7 +515,7 @@ export default function ServiceStockCard() {
                   summary.produitsFinals.map((f) => (
                     <div key={f._id} className="flex justify-between text-sm py-1">
                       <span className="text-gray-700">{f._id}</span>
-                      <span className="font-bold text-pink-700">{f.totalKg} kg ({f.count} entrées)</span>
+                      <span className="font-bold text-pink-700">{f.totalKg.toFixed(1)} kg ({f.count} entrées)</span>
                     </div>
                   ))
                 )}
