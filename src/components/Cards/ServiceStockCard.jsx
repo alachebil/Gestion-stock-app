@@ -18,7 +18,7 @@ export default function ServiceStockCard() {
   const [finalForm, setFinalForm] = useState({ type: "base", quantiteKg: "" });
 
   const [activeTab, setActiveTab] = useState("summary");
-  const [counters, setCounters] = useState({ semiPretBase: 0, semiPretBargatere: 0, finalBase: 0, finalBargatere: 0 });
+  const [counters, setCounters] = useState({ semiPretBase: 0, semiPretbargataire: 0, finalBase: 0, finalbargataire: 0 });
 
   // Sort & Search states
   const [semiSortOrder, setSemiSortOrder] = useState("none");
@@ -42,7 +42,7 @@ export default function ServiceStockCard() {
   const [clients, setClients] = useState([]);
   const [selectedClientId, setSelectedClientId] = useState("");
   const [prixKgBase, setPrixKgBase] = useState("");
-  const [prixKgBargatere, setPrixKgBargatere] = useState("");
+  const [prixKgbargataire, setPrixKgbargataire] = useState("");
   const [chauffeur, setChauffeur] = useState("");
   const [matriculation, setMatriculation] = useState("");
   const [montantPaye, setMontantPaye] = useState("");
@@ -51,7 +51,7 @@ export default function ServiceStockCard() {
   const [showDemoPopup, setShowDemoPopup] = useState(false);
   const [demoProducts, setDemoProducts] = useState([]);
   const [demoPrixKgBase, setDemoPrixKgBase] = useState("");
-  const [demoPrixKgBargatere, setDemoPrixKgBargatere] = useState("");
+  const [demoPrixKgbargataire, setDemoPrixKgbargataire] = useState("");
   const [demoChauffeur, setDemoChauffeur] = useState("");
   const [demoMatriculation, setDemoMatriculation] = useState("");
   const [demoSelectedClientId, setDemoSelectedClientId] = useState("");
@@ -179,7 +179,7 @@ export default function ServiceStockCard() {
     } catch { /* ignore */ }
     setDemoProducts(finals.filter((f) => selectedIds.includes(f._id)).map((p) => ({ ...p, demoQuantiteKg: p.quantiteKg })));
     setDemoPrixKgBase("");
-    setDemoPrixKgBargatere("");
+    setDemoPrixKgbargataire("");
     setDemoChauffeur("");
     setDemoMatriculation("");
     setDemoSelectedClientId("");
@@ -197,7 +197,7 @@ export default function ServiceStockCard() {
   const calcTotal = () => {
     let total = 0;
     if (groupedSelected.base && prixKgBase) total += groupedSelected.base.totalKg * Number(prixKgBase);
-    if (groupedSelected.bargatere && prixKgBargatere) total += groupedSelected.bargatere.totalKg * Number(prixKgBargatere);
+    if (groupedSelected.bargataire && prixKgbargataire) total += groupedSelected.bargataire.totalKg * Number(prixKgbargataire);
     return total;
   };
 
@@ -287,7 +287,7 @@ export default function ServiceStockCard() {
   const calcDemoTotal = () => {
     let total = 0;
     if (demoGroupedSelected.base && demoPrixKgBase) total += demoGroupedSelected.base.totalKg * Number(demoPrixKgBase);
-    if (demoGroupedSelected.bargatere && demoPrixKgBargatere) total += demoGroupedSelected.bargatere.totalKg * Number(demoPrixKgBargatere);
+    if (demoGroupedSelected.bargataire && demoPrixKgbargataire) total += demoGroupedSelected.bargataire.totalKg * Number(demoPrixKgbargataire);
     return total;
   };
 
@@ -304,9 +304,9 @@ export default function ServiceStockCard() {
       if (!demoPrixKgBase || Number(demoPrixKgBase) <= 0) { alert("Entrez un prix/kg pour le type Base"); return; }
       prixParTypeData.push({ type: "base", totalKg: demoGroupedSelected.base.totalKg, prixKg: Number(demoPrixKgBase), sousTotal: demoGroupedSelected.base.totalKg * Number(demoPrixKgBase) });
     }
-    if (demoGroupedSelected.bargatere) {
-      if (!demoPrixKgBargatere || Number(demoPrixKgBargatere) <= 0) { alert("Entrez un prix/kg pour le type Bargatère"); return; }
-      prixParTypeData.push({ type: "bargatere", totalKg: demoGroupedSelected.bargatere.totalKg, prixKg: Number(demoPrixKgBargatere), sousTotal: demoGroupedSelected.bargatere.totalKg * Number(demoPrixKgBargatere) });
+    if (demoGroupedSelected.bargataire) {
+      if (!demoPrixKgbargataire || Number(demoPrixKgbargataire) <= 0) { alert("Entrez un prix/kg pour le type Bargataire"); return; }
+      prixParTypeData.push({ type: "bargataire", totalKg: demoGroupedSelected.bargataire.totalKg, prixKg: Number(demoPrixKgbargataire), sousTotal: demoGroupedSelected.bargataire.totalKg * Number(demoPrixKgbargataire) });
     }
     const demoVente = {
       dateVente: new Date(),
@@ -329,9 +329,9 @@ export default function ServiceStockCard() {
       if (!prixKgBase || Number(prixKgBase) <= 0) { alert("Entrez un prix/kg pour le type Base"); return; }
       prixParType.push({ type: "base", prixKg: Number(prixKgBase) });
     }
-    if (groupedSelected.bargatere) {
-      if (!prixKgBargatere || Number(prixKgBargatere) <= 0) { alert("Entrez un prix/kg pour le type Bargatère"); return; }
-      prixParType.push({ type: "bargatere", prixKg: Number(prixKgBargatere) });
+    if (groupedSelected.bargataire) {
+      if (!prixKgbargataire || Number(prixKgbargataire) <= 0) { alert("Entrez un prix/kg pour le type Bargataire"); return; }
+      prixParType.push({ type: "bargataire", prixKg: Number(prixKgbargataire) });
     }
     const montantPayeVal = montantPaye ? Number(montantPaye) : null;
     try {
@@ -350,7 +350,7 @@ export default function ServiceStockCard() {
       setSelectedIds([]);
       setSelectedClientId("");
       setPrixKgBase("");
-      setPrixKgBargatere("");
+      setPrixKgbargataire("");
       setChauffeur("");
       setMatriculation("");
       setMontantPaye("");
@@ -537,7 +537,7 @@ export default function ServiceStockCard() {
             <form onSubmit={handleAddSemiPret} className="flex flex-wrap gap-3 mb-6 items-end">
               <input className="border rounded px-3 py-2 text-sm" placeholder="Nom" required value={semiPretForm.nom} onChange={(e) => setSemiPretForm({ ...semiPretForm, nom: e.target.value })} />
               <select className="border rounded px-3 py-2 text-sm" value={semiPretForm.type} onChange={(e) => setSemiPretForm({ ...semiPretForm, type: e.target.value })}>
-                <option>base</option><option>bargatere</option>
+                <option>base</option><option>bargataire</option>
               </select>
               <input className="border rounded px-3 py-2 text-sm w-28" type="number" min="0.01" step="0.01" placeholder="Quantité (kg)" required value={semiPretForm.quantiteKg} onChange={(e) => setSemiPretForm({ ...semiPretForm, quantiteKg: e.target.value })} />
               <button type="submit" className="bg-purple-600 text-white px-4 py-2 rounded text-sm hover:bg-purple-700">Ajouter</button>
@@ -604,10 +604,10 @@ export default function ServiceStockCard() {
             </div>
             <form onSubmit={handleAddFinal} className="flex flex-wrap gap-3 mb-6 items-end">
               <select className="border rounded px-3 py-2 text-sm" value={finalForm.type} onChange={(e) => setFinalForm({ ...finalForm, type: e.target.value })}>
-                <option value="base">Base</option><option value="bargatere">Bargatère</option>
+                <option value="base">Base</option><option value="bargataire">Bargataire</option>
               </select>
               <input className="border rounded px-3 py-2 text-sm w-28" type="number" min="0.01" step="0.01" placeholder="Quantité (kg)" required value={finalForm.quantiteKg} onChange={(e) => setFinalForm({ ...finalForm, quantiteKg: e.target.value })} />
-              <span className="text-sm text-gray-500">Stock SP Base: <strong className="text-purple-700">{(counters.semiPretBase || 0).toFixed(2)} kg</strong> | SP Bargatère: <strong className="text-purple-700">{(counters.semiPretBargatere || 0).toFixed(2)} kg</strong></span>
+              <span className="text-sm text-gray-500">Stock SP Base: <strong className="text-purple-700">{(counters.semiPretBase || 0).toFixed(2)} kg</strong> | SP Bargataire: <strong className="text-purple-700">{(counters.semiPretbargataire || 0).toFixed(2)} kg</strong></span>
               <button type="submit" className="bg-pink-600 text-white px-4 py-2 rounded text-sm hover:bg-pink-700">Ajouter</button>
             </form>
             <table className="w-full text-sm text-left">
@@ -658,7 +658,7 @@ export default function ServiceStockCard() {
                 <div>
                   <label className="block text-sm font-medium text-gray-600 mb-1">Type</label>
                   <select className="border rounded px-3 py-2 text-sm w-full" value={editForm.type || "base"} onChange={(e) => setEditForm({ ...editForm, type: e.target.value })}>
-                    <option>base</option><option>bargatere</option>
+                    <option>base</option><option>bargataire</option>
                   </select>
                 </div>
               )}
@@ -714,12 +714,12 @@ export default function ServiceStockCard() {
                   {demoPrixKgBase && <p className="text-xs text-purple-700 mt-1 font-bold">Sous-total: {(demoGroupedSelected.base.totalKg * Number(demoPrixKgBase)).toFixed(2)} TND</p>}
                 </div>
               )}
-              {demoGroupedSelected.bargatere && (
+              {demoGroupedSelected.bargataire && (
                 <div className="bg-pink-50 border border-pink-200 rounded p-3">
-                  <h5 className="font-semibold text-pink-800 text-sm mb-1">Bargatère</h5>
-                  <p className="text-xs text-gray-600">{demoGroupedSelected.bargatere.count} produit(s) - {demoGroupedSelected.bargatere.totalKg.toFixed(2)} kg</p>
-                  <input className="border rounded px-3 py-2 text-sm w-full mt-2" type="number" min="0.01" step="0.01" placeholder="Prix / kg (TND)" value={demoPrixKgBargatere} onChange={(e) => setDemoPrixKgBargatere(e.target.value)} />
-                  {demoPrixKgBargatere && <p className="text-xs text-pink-700 mt-1 font-bold">Sous-total: {(demoGroupedSelected.bargatere.totalKg * Number(demoPrixKgBargatere)).toFixed(2)} TND</p>}
+                  <h5 className="font-semibold text-pink-800 text-sm mb-1">Bargataire</h5>
+                  <p className="text-xs text-gray-600">{demoGroupedSelected.bargataire.count} produit(s) - {demoGroupedSelected.bargataire.totalKg.toFixed(2)} kg</p>
+                  <input className="border rounded px-3 py-2 text-sm w-full mt-2" type="number" min="0.01" step="0.01" placeholder="Prix / kg (TND)" value={demoPrixKgbargataire} onChange={(e) => setDemoPrixKgbargataire(e.target.value)} />
+                  {demoPrixKgbargataire && <p className="text-xs text-pink-700 mt-1 font-bold">Sous-total: {(demoGroupedSelected.bargataire.totalKg * Number(demoPrixKgbargataire)).toFixed(2)} TND</p>}
                 </div>
               )}
             </div>
@@ -787,12 +787,12 @@ export default function ServiceStockCard() {
                   {prixKgBase && <p className="text-xs text-purple-700 mt-1 font-bold">Sous-total: {(groupedSelected.base.totalKg * Number(prixKgBase)).toFixed(2)} TND</p>}
                 </div>
               )}
-              {groupedSelected.bargatere && (
+              {groupedSelected.bargataire && (
                 <div className="bg-pink-50 border border-pink-200 rounded p-3">
-                  <h5 className="font-semibold text-pink-800 text-sm mb-1">Bargatère</h5>
-                  <p className="text-xs text-gray-600">{groupedSelected.bargatere.count} produit(s) - {groupedSelected.bargatere.totalKg.toFixed(2)} kg</p>
-                  <input className="border rounded px-3 py-2 text-sm w-full mt-2" type="number" min="0.01" step="0.01" placeholder="Prix / kg (TND)" value={prixKgBargatere} onChange={(e) => setPrixKgBargatere(e.target.value)} />
-                  {prixKgBargatere && <p className="text-xs text-pink-700 mt-1 font-bold">Sous-total: {(groupedSelected.bargatere.totalKg * Number(prixKgBargatere)).toFixed(2)} TND</p>}
+                  <h5 className="font-semibold text-pink-800 text-sm mb-1">Bargataire</h5>
+                  <p className="text-xs text-gray-600">{groupedSelected.bargataire.count} produit(s) - {groupedSelected.bargataire.totalKg.toFixed(2)} kg</p>
+                  <input className="border rounded px-3 py-2 text-sm w-full mt-2" type="number" min="0.01" step="0.01" placeholder="Prix / kg (TND)" value={prixKgbargataire} onChange={(e) => setPrixKgbargataire(e.target.value)} />
+                  {prixKgbargataire && <p className="text-xs text-pink-700 mt-1 font-bold">Sous-total: {(groupedSelected.bargataire.totalKg * Number(prixKgbargataire)).toFixed(2)} TND</p>}
                 </div>
               )}
             </div>
