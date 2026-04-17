@@ -335,7 +335,7 @@ export default function FactureTable() {
           <input
             className="border rounded px-3 py-2 text-sm w-28 bg-gray-600 text-white placeholder-gray-400"
             type="number"
-            min="0.01"
+            min="1"
             step="0.01"
             placeholder="Quantite (kg)"
             required

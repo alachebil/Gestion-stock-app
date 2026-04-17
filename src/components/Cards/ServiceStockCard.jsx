@@ -201,7 +201,7 @@ export default function ServiceStockCard() {
     return total;
   };
 
-  const generateVentePDF = (vente, clientObj) => {
+  const generateVentePDF = (vente, clientObj, montantPayeValue) => {
     const doc = new jsPDF();
     doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
@@ -261,6 +261,17 @@ export default function ServiceStockCard() {
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.text(`Montant TOTAL: ${vente.totalGeneral.toFixed(2)} TND`, 20, y);
+    if (montantPayeValue !== undefined && montantPayeValue !== null) {
+      y += 8;
+      doc.text(`Montant Payé: ${Number(montantPayeValue).toFixed(2)} TND`, 20, y);
+      const reste = vente.totalGeneral - Number(montantPayeValue);
+      if (reste > 0) {
+        y += 8;
+        doc.setTextColor(255, 0, 0);
+        doc.text(`Reste à payer: ${reste.toFixed(2)} TND`, 20, y);
+        doc.setTextColor(0, 0, 0);
+      }
+    }
 
     doc.save(`bon_de_vente_service_${clientObj.nom}_${new Date().toISOString().split("T")[0]}.pdf`);
   };
@@ -334,7 +345,7 @@ export default function ServiceStockCard() {
         ...(montantPayeVal !== null && { montantPaye: montantPayeVal }),
       });
       const clientObj = clients.find((c) => c._id === selectedClientId);
-      generateVentePDF(res.data, clientObj);
+      generateVentePDF(res.data, clientObj, montantPayeVal);
       setShowVentePopup(false);
       setSelectedIds([]);
       setSelectedClientId("");
