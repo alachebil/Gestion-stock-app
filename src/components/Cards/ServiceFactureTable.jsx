@@ -21,6 +21,7 @@ export default function ServiceFactureTable() {
   const [form, setForm] = useState({
     nomFournisseur: "",
     numTelephone: "",
+    adresse: "",
     refProduit: "",
     quantitePortee: "",
     prixTotal: "",
@@ -77,6 +78,7 @@ export default function ServiceFactureTable() {
       setForm({
         nomFournisseur: "",
         numTelephone: "",
+        adresse: "",
         refProduit: "",
         quantitePortee: "",
         prixTotal: "",
@@ -112,6 +114,7 @@ export default function ServiceFactureTable() {
     setEditForm({
       nomFournisseur: facture.nomFournisseur,
       numTelephone: facture.numTelephone,
+      adresse: facture.adresse || "",
       refProduit: facture.refProduit,
       quantitePortee: facture.quantitePortee,
       prixTotal: facture.prixTotal,
@@ -174,7 +177,7 @@ export default function ServiceFactureTable() {
     doc.text(`Date: ${new Date().toLocaleDateString("fr-FR")}`, 150, 42);
 
     doc.setFillColor(236, 240, 241);
-    doc.rect(20, 50, 170, 104, "F");
+    doc.rect(20, 50, 170, 116, "F");
 
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
@@ -197,37 +200,42 @@ export default function ServiceFactureTable() {
     doc.text(facture.numTelephone, 85, startY + lineH);
 
     doc.setFont("helvetica", "bold");
-    doc.text("Ref Produit:", 25, startY + lineH * 2);
+    doc.text("Adresse:", 25, startY + lineH * 2);
     doc.setFont("helvetica", "normal");
-    doc.text(facture.refProduit, 85, startY + lineH * 2);
+    doc.text(facture.adresse || "—", 85, startY + lineH * 2);
 
     doc.setFont("helvetica", "bold");
-    doc.text("Quantite Portee:", 25, startY + lineH * 3);
+    doc.text("Ref Produit:", 25, startY + lineH * 3);
     doc.setFont("helvetica", "normal");
-    doc.text(`${facture.quantitePortee} kg`, 85, startY + lineH * 3);
+    doc.text(facture.refProduit, 85, startY + lineH * 3);
 
     doc.setFont("helvetica", "bold");
-    doc.text("Prix Total:", 25, startY + lineH * 4);
+    doc.text("Quantite Portee:", 25, startY + lineH * 4);
     doc.setFont("helvetica", "normal");
-    doc.text(`${facture.prixTotal} TND`, 85, startY + lineH * 4);
+    doc.text(`${facture.quantitePortee} kg`, 85, startY + lineH * 4);
 
     doc.setFont("helvetica", "bold");
-    doc.text("Prix Unitaire:", 25, startY + lineH * 5);
+    doc.text("Prix Total:", 25, startY + lineH * 5);
     doc.setFont("helvetica", "normal");
-    doc.text(`${facture.prixUnite || 0} TND`, 85, startY + lineH * 5);
+    doc.text(`${facture.prixTotal} TND`, 85, startY + lineH * 5);
 
     doc.setFont("helvetica", "bold");
-    doc.text("Prix Diverse (Paye):", 25, startY + lineH * 6);
+    doc.text("Prix Unitaire:", 25, startY + lineH * 6);
     doc.setFont("helvetica", "normal");
-    doc.text(`${facture.prixDiverse || 0} TND`, 85, startY + lineH * 6);
+    doc.text(`${facture.prixUnite || 0} TND`, 85, startY + lineH * 6);
 
     doc.setFont("helvetica", "bold");
-    doc.text("Date de Livraison:", 25, startY + lineH * 7);
+    doc.text("Prix Diverse (Paye):", 25, startY + lineH * 7);
+    doc.setFont("helvetica", "normal");
+    doc.text(`${facture.prixDiverse || 0} TND`, 85, startY + lineH * 7);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("Date de Livraison:", 25, startY + lineH * 8);
     doc.setFont("helvetica", "normal");
     doc.text(
       new Date(facture.dateLivraison).toLocaleDateString("fr-FR"),
       85,
-      startY + lineH * 7
+      startY + lineH * 8
     );
 
     doc.setDrawColor(156, 39, 176);
@@ -321,6 +329,12 @@ export default function ServiceFactureTable() {
             pattern="\d{8}"
             value={form.numTelephone}
             onChange={(e) => setForm({ ...form, numTelephone: e.target.value })}
+          />
+          <input
+            className="border rounded px-3 py-2 text-sm bg-gray-600 text-white placeholder-gray-400"
+            placeholder="Adresse (optionnel)"
+            value={form.adresse}
+            onChange={(e) => setForm({ ...form, adresse: e.target.value })}
           />
           <input
             className="border rounded px-3 py-2 text-sm bg-gray-600 text-white placeholder-gray-400"
@@ -438,6 +452,7 @@ export default function ServiceFactureTable() {
               <tr>
                 <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">Nom Fournisseur</th>
                 <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">Telephone</th>
+                <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">Adresse</th>
                 <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">Ref Produit</th>
                 <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white cursor-pointer select-none" onClick={() => toggleSort("quantitePortee")}>Quantite{sortIcon("quantitePortee")}</th>
                 <th className="px-6 py-3 text-sm font-semibold text-left bg-gray-700 text-white">Prix Total</th>
@@ -452,6 +467,7 @@ export default function ServiceFactureTable() {
                 <tr key={f._id} className="bg-gray-800 hover:bg-gray-700">
                   <td className="border-t-0 px-6 align-middle text-sm p-4 text-white font-bold">{f.nomFournisseur}</td>
                   <td className="border-t-0 px-6 align-middle text-sm p-4 text-white">{f.numTelephone}</td>
+                  <td className="border-t-0 px-6 align-middle text-sm p-4 text-white">{f.adresse || "—"}</td>
                   <td className="border-t-0 px-6 align-middle text-sm p-4 text-white">{f.refProduit}</td>
                   <td className="border-t-0 px-6 align-middle text-sm p-4 text-white">{f.quantitePortee} kg</td>
                   <td className="border-t-0 px-6 align-middle text-sm p-4 text-white">{f.prixTotal} TND</td>
@@ -508,6 +524,7 @@ export default function ServiceFactureTable() {
             <form onSubmit={handleEditFacture} className="space-y-3">
               <input className="border rounded px-3 py-2 text-sm w-full bg-gray-600 text-white" placeholder="Nom Fournisseur" required value={editForm.nomFournisseur} onChange={(e) => setEditForm({ ...editForm, nomFournisseur: e.target.value })} />
               <input className="border rounded px-3 py-2 text-sm w-full bg-gray-600 text-white" placeholder="Num Telephone" required value={editForm.numTelephone} onChange={(e) => setEditForm({ ...editForm, numTelephone: e.target.value })} />
+              <input className="border rounded px-3 py-2 text-sm w-full bg-gray-600 text-white" placeholder="Adresse (optionnel)" value={editForm.adresse || ""} onChange={(e) => setEditForm({ ...editForm, adresse: e.target.value })} />
               <input className="border rounded px-3 py-2 text-sm w-full bg-gray-600 text-white" placeholder="Ref Produit" required value={editForm.refProduit} onChange={(e) => setEditForm({ ...editForm, refProduit: e.target.value })} />
               <input className="border rounded px-3 py-2 text-sm w-full bg-gray-600 text-white" type="number" min="0" step="0.01" placeholder="Quantite (kg)" required value={editForm.quantitePortee} onChange={(e) => setEditForm({ ...editForm, quantitePortee: e.target.value })} />
               <input className="border rounded px-3 py-2 text-sm w-full bg-gray-600 text-white" type="number" min="0" step="0.01" placeholder="Prix Total" required value={editForm.prixTotal} onChange={(e) => setEditForm({ ...editForm, prixTotal: e.target.value })} />

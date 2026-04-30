@@ -258,6 +258,10 @@ export default function StockCard() {
     doc.text("Client:", 20, y);
     doc.setFont("helvetica", "normal");
     doc.text(`${clientObj.nom}  |  Tél: ${clientObj.telephone}  |  Adresse: ${clientObj.adresse}`, 45, y);
+    y += 6;
+    if (clientObj.immatriculationFiscale) {
+      doc.text(`Immatriculation Fiscale: ${clientObj.immatriculationFiscale}`, 45, y);
+    }
     y += 8;
     doc.setFont("helvetica", "bold");
     doc.text("Chauffeur:", 20, y);
@@ -789,7 +793,7 @@ export default function StockCard() {
               <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">Ajouter</button>
             </form>
             <table className="w-full text-sm text-left">
-              <thead className="bg-gray-100"><tr><th className="px-4 py-2"><input type="checkbox" onChange={selectAllDispo} checked={filteredFinals.filter(f => f.etat === "dispo").length > 0 && filteredFinals.filter(f => f.etat === "dispo").every(f => selectedIds.includes(f._id))} /></th><th className="px-4 py-2">Nom</th><th className="px-4 py-2">Type</th><th className="px-4 py-2 cursor-pointer select-none" onClick={() => toggleSort(finalSortOrder, setFinalSortOrder)}>Quantité (kg) {sortIcon(finalSortOrder)}</th><th className="px-4 py-2">État</th><th className="px-4 py-2">Actions</th></tr></thead>
+              <thead className="bg-gray-100"><tr><th className="px-4 py-2"><input type="checkbox" onChange={selectAllDispo} checked={filteredFinals.filter(f => f.etat === "dispo").length > 0 && filteredFinals.filter(f => f.etat === "dispo").every(f => selectedIds.includes(f._id))} /></th><th className="px-4 py-2">Nom</th><th className="px-4 py-2">Type</th><th className="px-4 py-2 cursor-pointer select-none" onClick={() => toggleSort(finalSortOrder, setFinalSortOrder)}>Quantité (kg) {sortIcon(finalSortOrder)}</th><th className="px-4 py-2">Commentaire</th><th className="px-4 py-2">État</th><th className="px-4 py-2">Actions</th></tr></thead>
               <tbody>
                 {paginatedFinals.map((f) => (
                   <tr key={f._id} className={`border-b hover:bg-gray-50 ${selectedIds.includes(f._id) ? "bg-indigo-50" : ""}`}>
@@ -801,6 +805,7 @@ export default function StockCard() {
                     <td className="px-4 py-2">{f.nom}</td>
                     <td className="px-4 py-2"><span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">{f.type}</span></td>
                     <td className="px-4 py-2 font-semibold">{f.quantiteKg}</td>
+                    <td className="px-4 py-2 text-xs text-gray-600 max-w-[150px] truncate" title={f.commentaire || ""}>{f.commentaire || "—"}</td>
                     <td className="px-4 py-2">
                       <span
                         className={`w-24 inline-block text-center px-3 py-1 rounded-full text-white text-xs font-bold ${f.etat === "vendu" ? "bg-red-500" : "bg-green-500"}`}
