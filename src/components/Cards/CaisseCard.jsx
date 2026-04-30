@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import SmartPagination from "../Pagination/SmartPagination";
 
 const API = "http://localhost:3000/caisse";
 
@@ -13,6 +14,12 @@ export default function CaisseCard() {
   // Pagination
   const entriesPerPage = 10;
   const [caissePage, setCaissePage] = useState(1);
+
+  // Filters
+  const [filterType, setFilterType] = useState("tous");
+  const [filterDateFrom, setFilterDateFrom] = useState("");
+  const [filterDateTo, setFilterDateTo] = useState("");
+  const [filterSearch, setFilterSearch] = useState("");
 
   const fetchAll = async () => {
     setLoading(true);
@@ -57,6 +64,26 @@ export default function CaisseCard() {
   };
 
   const formatDate = (dateString) => new Date(dateString).toLocaleDateString("fr-FR");
+
+  // Filtered entries
+  const filteredEntries = entries.filter((e) => {
+    if (filterType !== "tous" && e.type !== filterType) return false;
+    if (filterSearch && !(e.description || "").toLowerCase().includes(filterSearch.toLowerCase())) return false;
+    if (filterDateFrom || filterDateTo) {
+      if (!e.date) return false;
+      const d = new Date(e.date).toISOString().slice(0, 10);
+      if (filterDateFrom && d < filterDateFrom) return false;
+      if (filterDateTo && d > filterDateTo) return false;
+    }
+    return true;
+  });
+
+  const filteredTotal = filteredEntries.reduce((s, x) => s + (Number(x.montant) || 0), 0);
+  const filteredVentes = filteredEntries.filter((x) => x.type === "vente").reduce((s, x) => s + (Number(x.montant) || 0), 0);
+  const filteredDepenses = filteredEntries.filter((x) => x.type === "depense").reduce((s, x) => s + (Number(x.montant) || 0), 0);
+
+  const caisseTotalPages = Math.ceil(filteredEntries.length / entriesPerPage);
+  const paginatedEntries = filteredEntries.slice((caissePage - 1) * entriesPerPage, caissePage * entriesPerPage);
 
   if (loading) return <p className="text-center mt-10 text-gray-500">Chargement de la caisse...</p>;
 
@@ -137,6 +164,39 @@ export default function CaisseCard() {
           <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">Ajouter</button>
         </form>
 
+        {/* Filter Bar */}
+        <div className="flex flex-wrap gap-3 mb-3 items-center bg-gray-50 border border-gray-200 rounded p-3">
+          <input
+            className="border rounded px-3 py-2 text-sm flex-1 min-w-[180px]"
+            placeholder="Rechercher description..."
+            value={filterSearch}
+            onChange={(e) => { setFilterSearch(e.target.value); setCaissePage(1); }}
+          />
+          <select className="border rounded px-3 py-2 text-sm" value={filterType} onChange={(e) => { setFilterType(e.target.value); setCaissePage(1); }}>
+            <option value="tous">Tous types</option>
+            <option value="vente">Vente</option>
+            <option value="depense">Dépense</option>
+          </select>
+          <label className="text-xs text-gray-600">Du:</label>
+          <input type="date" className="border rounded px-2 py-2 text-sm" value={filterDateFrom} onChange={(e) => { setFilterDateFrom(e.target.value); setCaissePage(1); }} />
+          <label className="text-xs text-gray-600">Au:</label>
+          <input type="date" className="border rounded px-2 py-2 text-sm" value={filterDateTo} onChange={(e) => { setFilterDateTo(e.target.value); setCaissePage(1); }} />
+          {(filterDateFrom || filterDateTo || filterType !== "tous" || filterSearch) && (
+            <button type="button" onClick={() => { setFilterDateFrom(""); setFilterDateTo(""); setFilterType("tous"); setFilterSearch(""); setCaissePage(1); }} className="text-xs text-red-600 hover:underline">Réinitialiser</button>
+          )}
+        </div>
+        <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="bg-blue-50 border border-blue-200 rounded px-3 py-2 text-sm">
+            <span className="text-blue-700 font-semibold">Total filtré:</span> <strong className="text-blue-900">{filteredTotal.toFixed(2)} TND</strong> <span className="text-gray-500">— {filteredEntries.length} entrée(s)</span>
+          </div>
+          <div className="bg-green-50 border border-green-200 rounded px-3 py-2 text-sm">
+            <span className="text-green-700 font-semibold">Ventes:</span> <strong className="text-green-900">{filteredVentes.toFixed(2)} TND</strong>
+          </div>
+          <div className="bg-red-50 border border-red-200 rounded px-3 py-2 text-sm">
+            <span className="text-red-700 font-semibold">Dépenses:</span> <strong className="text-red-900">{filteredDepenses.toFixed(2)} TND</strong>
+          </div>
+        </div>
+
         {/* Entries table */}
         <table className="w-full text-sm text-left mb-6">
           <thead className="bg-gray-100">
@@ -149,7 +209,7 @@ export default function CaisseCard() {
             </tr>
           </thead>
           <tbody>
-            {entries.slice((caissePage - 1) * entriesPerPage, caissePage * entriesPerPage).map((e) => (
+            {paginatedEntries.map((e) => (
               <tr key={e._id} className="border-b hover:bg-gray-50">
                 <td className="px-4 py-2">
                   <span className={`text-xs px-2 py-1 rounded ${e.type === "depense" ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}`}>
@@ -167,15 +227,14 @@ export default function CaisseCard() {
           </tbody>
         </table>
         {entries.length === 0 && <p className="text-gray-400 text-sm text-center mb-6">Aucune entrée manuelle</p>}
-        {Math.ceil(entries.length / entriesPerPage) > 1 && (
-          <div className="flex justify-center space-x-2 mb-6">
-            {Array.from({ length: Math.ceil(entries.length / entriesPerPage) }, (_, i) => (
-              <button key={i + 1} onClick={() => setCaissePage(i + 1)} className={`px-3 py-1 rounded text-sm ${caissePage === i + 1 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}>
-                {i + 1}
-              </button>
-            ))}
-          </div>
-        )}
+        {entries.length > 0 && filteredEntries.length === 0 && <p className="text-gray-400 text-sm text-center mb-6">Aucune entrée ne correspond aux filtres</p>}
+        <SmartPagination
+          currentPage={caissePage}
+          totalPages={caisseTotalPages}
+          setPage={setCaissePage}
+          activeClass="bg-blue-600 text-white"
+          inactiveClass="bg-gray-200 text-gray-700 hover:bg-gray-300"
+        />
       </div>
     </div>
   );

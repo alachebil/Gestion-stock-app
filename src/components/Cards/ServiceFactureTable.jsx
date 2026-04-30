@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { FaTrashAlt, FaFilePdf, FaEdit } from "react-icons/fa";
 import { jsPDF } from "jspdf";
+import SmartPagination from "../Pagination/SmartPagination";
 
 const API = "http://localhost:3000/service-facture";
 
@@ -15,7 +16,8 @@ export default function ServiceFactureTable() {
   const [sortField, setSortField] = useState(null);
   const [sortOrder, setSortOrder] = useState("asc");
   const [searchFournisseur, setSearchFournisseur] = useState("");
-  const [searchDate, setSearchDate] = useState("");
+  const [searchDateFrom, setSearchDateFrom] = useState("");
+  const [searchDateTo, setSearchDateTo] = useState("");
   const [form, setForm] = useState({
     nomFournisseur: "",
     numTelephone: "",
@@ -256,8 +258,10 @@ export default function ServiceFactureTable() {
   const sortedFactures = [...factures]
     .filter((f) => {
       const matchFournisseur = !searchFournisseur || f.nomFournisseur.toLowerCase().includes(searchFournisseur.toLowerCase());
-      const matchDate = !searchDate || (f.dateLivraison && f.dateLivraison.split("T")[0] === searchDate);
-      return matchFournisseur && matchDate;
+      const dateStr = f.dateLivraison ? f.dateLivraison.split("T")[0] : "";
+      const matchFrom = !searchDateFrom || (dateStr && dateStr >= searchDateFrom);
+      const matchTo = !searchDateTo || (dateStr && dateStr <= searchDateTo);
+      return matchFournisseur && matchFrom && matchTo;
     })
     .sort((a, b) => {
       if (!sortField) return 0;
@@ -341,16 +345,7 @@ export default function ServiceFactureTable() {
               setForm({ ...form, quantitePortee: qty, prixTotal: total });
             }}
           />
-          <input
-            className="border rounded px-3 py-2 text-sm w-28 bg-gray-600 text-white placeholder-gray-400"
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder="Prix Total"
-            required
-            value={form.prixTotal}
-            readOnly
-          />
+
           <input
             className="border rounded px-3 py-2 text-sm w-28 bg-gray-600 text-white placeholder-gray-400"
             type="number"
@@ -365,6 +360,18 @@ export default function ServiceFactureTable() {
               setForm({ ...form, prixUnite: pu, prixTotal: total });
             }}
           />
+
+          <input
+            className="border rounded px-3 py-2 text-sm w-28 bg-gray-600 text-white placeholder-gray-400"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="Prix Total"
+            required
+            value={form.prixTotal}
+            readOnly
+          />
+          
           <input
             className="border rounded px-3 py-2 text-sm w-32 bg-gray-600 text-white placeholder-gray-400"
             type="number"
@@ -401,16 +408,24 @@ export default function ServiceFactureTable() {
             value={searchFournisseur}
             onChange={(e) => { setSearchFournisseur(e.target.value); setCurrentPage(1); }}
           />
+          <label className="text-white text-sm">Du:</label>
           <input
             className="border rounded px-3 py-2 text-sm bg-gray-600 text-white"
             type="date"
-            value={searchDate}
-            onChange={(e) => { setSearchDate(e.target.value); setCurrentPage(1); }}
+            value={searchDateFrom}
+            onChange={(e) => { setSearchDateFrom(e.target.value); setCurrentPage(1); }}
           />
-          {(searchFournisseur || searchDate) && (
+          <label className="text-white text-sm">Au:</label>
+          <input
+            className="border rounded px-3 py-2 text-sm bg-gray-600 text-white"
+            type="date"
+            value={searchDateTo}
+            onChange={(e) => { setSearchDateTo(e.target.value); setCurrentPage(1); }}
+          />
+          {(searchFournisseur || searchDateFrom || searchDateTo) && (
             <button
               className="bg-gray-500 text-white px-3 py-2 rounded text-sm hover:bg-gray-400"
-              onClick={() => { setSearchFournisseur(""); setSearchDate(""); setCurrentPage(1); }}
+              onClick={() => { setSearchFournisseur(""); setSearchDateFrom(""); setSearchDateTo(""); setCurrentPage(1); }}
             >
               Réinitialiser
             </button>
@@ -460,37 +475,30 @@ export default function ServiceFactureTable() {
 
         {factures.length > 0 && (
           <div className="px-6 py-3 bg-gray-700 border-t border-gray-600">
-            <p className="text-white text-sm font-semibold text-right">
-              Total Prix Diversé (Payé) :{" "}
-              <span className="text-green-400 text-lg">
-                {factures.reduce((sum, f) => sum + (f.prixDiverse || 0), 0).toFixed(2)} TND
-              </span>
-            </p>
+            <div className="flex flex-wrap justify-end gap-6">
+              <p className="text-white text-sm font-semibold">
+                Quantité Totale {(searchFournisseur || searchDateFrom || searchDateTo) ? "(filtrée)" : ""} :{" "}
+                <span className="text-yellow-300 text-lg">
+                  {sortedFactures.reduce((sum, f) => sum + (Number(f.quantitePortee) || 0), 0).toFixed(2)} kg
+                </span>
+              </p>
+              <p className="text-white text-sm font-semibold">
+                Total Prix Diversé (Payé) {(searchFournisseur || searchDateFrom || searchDateTo) ? "(filtré)" : ""} :{" "}
+                <span className="text-green-400 text-lg">
+                  {sortedFactures.reduce((sum, f) => sum + (f.prixDiverse || 0), 0).toFixed(2)} TND
+                </span>
+              </p>
+            </div>
           </div>
         )}
 
-        {totalPages > 1 && (
-          <div className="px-4 py-3">
-            <nav>
-              <ul className="flex justify-center space-x-2">
-                {Array.from({ length: totalPages }, (_, index) => (
-                  <li key={index + 1}>
-                    <button
-                      onClick={() => setCurrentPage(index + 1)}
-                      className={`px-4 py-2 rounded ${
-                        currentPage === index + 1
-                          ? "bg-purple-500 text-white"
-                          : "bg-gray-700 text-white"
-                      }`}
-                    >
-                      {index + 1}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          </div>
-        )}
+        <SmartPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          setPage={setCurrentPage}
+          activeClass="bg-purple-500 text-white"
+          inactiveClass="bg-gray-700 text-white"
+        />
       </div>
 
       {editingFacture && (

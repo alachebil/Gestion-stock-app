@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import SmartPagination from "../Pagination/SmartPagination";
 
 const API = "http://localhost:3000/client";
 
@@ -7,7 +8,7 @@ export default function ClientCard() {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [form, setForm] = useState({ nom: "", telephone: "", adresse: "" });
+  const [form, setForm] = useState({ nom: "", telephone: "", adresse: "", immatriculationFiscale: "" });
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
 
@@ -40,7 +41,7 @@ export default function ClientCard() {
     e.preventDefault();
     try {
       await axios.post(API, form);
-      setForm({ nom: "", telephone: "", adresse: "" });
+      setForm({ nom: "", telephone: "", adresse: "", immatriculationFiscale: "" });
       fetchClients();
     } catch (err) {
       alert(err.response?.data?.message || "Erreur");
@@ -56,7 +57,7 @@ export default function ClientCard() {
 
   const startEdit = (client) => {
     setEditingId(client._id);
-    setEditForm({ nom: client.nom, telephone: client.telephone, adresse: client.adresse });
+    setEditForm({ nom: client.nom, telephone: client.telephone, adresse: client.adresse, immatriculationFiscale: client.immatriculationFiscale || "" });
   };
 
   const handleEdit = async (e) => {
@@ -89,7 +90,8 @@ export default function ClientCard() {
     (c) =>
       c.nom.toLowerCase().includes(search.toLowerCase()) ||
       c.telephone.includes(search) ||
-      c.adresse.toLowerCase().includes(search.toLowerCase())
+      c.adresse.toLowerCase().includes(search.toLowerCase()) ||
+      (c.immatriculationFiscale || "").toLowerCase().includes(search.toLowerCase())
   );
 
   const clientTotalPages = Math.ceil(filteredClients.length / clientsPerPage);
@@ -115,11 +117,12 @@ export default function ClientCard() {
           <input className="border rounded px-3 py-2 text-sm" placeholder="Nom" required value={form.nom} onChange={(e) => setForm({ ...form, nom: e.target.value })} />
           <input className="border rounded px-3 py-2 text-sm" placeholder="Téléphone" required value={form.telephone} onChange={(e) => setForm({ ...form, telephone: e.target.value })} />
           <input className="border rounded px-3 py-2 text-sm flex-1" placeholder="Adresse" required value={form.adresse} onChange={(e) => setForm({ ...form, adresse: e.target.value })} />
+          <input className="border rounded px-3 py-2 text-sm" placeholder="Immatriculation Fiscale (optionnel)" value={form.immatriculationFiscale} onChange={(e) => setForm({ ...form, immatriculationFiscale: e.target.value })} />
           <button type="submit" className="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700">Ajouter</button>
         </form>
 
         {/* Search */}
-        <input className="border rounded px-3 py-2 text-sm mb-4 w-full" placeholder="Rechercher par nom, téléphone ou adresse..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        <input className="border rounded px-3 py-2 text-sm mb-4 w-full" placeholder="Rechercher par nom, téléphone, adresse ou immatriculation fiscale..." value={search} onChange={(e) => setSearch(e.target.value)} />
 
         {/* Table */}
         <table className="w-full text-sm text-left">
@@ -128,6 +131,7 @@ export default function ClientCard() {
               <th className="px-4 py-2">Nom</th>
               <th className="px-4 py-2">Téléphone</th>
               <th className="px-4 py-2">Adresse</th>
+              <th className="px-4 py-2">Immat. Fiscale</th>
               <th className="px-4 py-2">Actions</th>
             </tr>
           </thead>
@@ -137,6 +141,7 @@ export default function ClientCard() {
                 <td className="px-4 py-2 font-semibold">{c.nom}</td>
                 <td className="px-4 py-2">{c.telephone}</td>
                 <td className="px-4 py-2">{c.adresse}</td>
+                <td className="px-4 py-2 text-gray-600">{c.immatriculationFiscale || "—"}</td>
                 <td className="px-4 py-2 flex gap-2">
                   <button onClick={() => viewVentes(c)} className="text-indigo-500 hover:text-indigo-700 text-xs" title="Historique achats"><i className="fas fa-history"></i></button>
                   <button onClick={() => startEdit(c)} className="text-blue-500 hover:text-blue-700 text-xs"><i className="fas fa-edit"></i></button>
@@ -147,15 +152,13 @@ export default function ClientCard() {
           </tbody>
         </table>
         {filteredClients.length === 0 && <p className="text-gray-400 text-sm text-center mt-4">Aucun client trouvé</p>}
-        {clientTotalPages > 1 && (
-          <div className="flex justify-center space-x-2 mt-4">
-            {Array.from({ length: clientTotalPages }, (_, i) => (
-              <button key={i + 1} onClick={() => setClientPage(i + 1)} className={`px-3 py-1 rounded text-sm ${clientPage === i + 1 ? "bg-indigo-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}>
-                {i + 1}
-              </button>
-            ))}
-          </div>
-        )}
+        <SmartPagination
+          currentPage={clientPage}
+          totalPages={clientTotalPages}
+          setPage={setClientPage}
+          activeClass="bg-indigo-600 text-white"
+          inactiveClass="bg-gray-200 text-gray-700 hover:bg-gray-300"
+        />
 
         {/* Ventes History Panel */}
         {selectedClient && (
@@ -189,13 +192,13 @@ export default function ClientCard() {
                 ))}
               </div>
               {Math.ceil(filteredVentes.length / ventesPerPage) > 1 && (
-                <div className="flex justify-center space-x-2 mt-3">
-                  {Array.from({ length: Math.ceil(filteredVentes.length / ventesPerPage) }, (_, i) => (
-                    <button key={i + 1} onClick={() => setVentePage(i + 1)} className={`px-3 py-1 rounded text-sm ${ventePage === i + 1 ? "bg-indigo-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}>
-                      {i + 1}
-                    </button>
-                  ))}
-                </div>
+                <SmartPagination
+                  currentPage={ventePage}
+                  totalPages={Math.ceil(filteredVentes.length / ventesPerPage)}
+                  setPage={setVentePage}
+                  activeClass="bg-indigo-600 text-white"
+                  inactiveClass="bg-gray-200 text-gray-700 hover:bg-gray-300"
+                />
               )}
               </>
             )}
@@ -220,6 +223,10 @@ export default function ClientCard() {
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-1">Adresse</label>
                 <input className="border rounded px-3 py-2 text-sm w-full" required value={editForm.adresse} onChange={(e) => setEditForm({ ...editForm, adresse: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Immatriculation Fiscale (optionnel)</label>
+                <input className="border rounded px-3 py-2 text-sm w-full" value={editForm.immatriculationFiscale || ""} onChange={(e) => setEditForm({ ...editForm, immatriculationFiscale: e.target.value })} />
               </div>
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => setEditingId(null)} className="px-4 py-2 text-sm bg-gray-300 rounded hover:bg-gray-400">Annuler</button>

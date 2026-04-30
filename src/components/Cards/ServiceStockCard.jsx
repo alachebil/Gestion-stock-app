@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import SmartPagination from "../Pagination/SmartPagination";
 
 const API = "http://localhost:3000/service-stock";
 const CLIENT_API = "http://localhost:3000/client";
@@ -15,7 +16,7 @@ export default function ServiceStockCard() {
 
   // Forms
   const [semiPretForm, setSemiPretForm] = useState({ nom: "", type: "base", quantiteKg: "" });
-  const [finalForm, setFinalForm] = useState({ type: "base", quantiteKg: "" });
+  const [finalForm, setFinalForm] = useState({ type: "base", quantiteKg: "", commentaire: "" });
 
   const [activeTab, setActiveTab] = useState("summary");
   const [counters, setCounters] = useState({ semiPretBase: 0, semiPretbargataire: 0, finalBase: 0, finalbargataire: 0 });
@@ -26,6 +27,16 @@ export default function ServiceStockCard() {
   const [semiSearch, setSemiSearch] = useState("");
   const [finalSearch, setFinalSearch] = useState("");
   const [finalEtatFilter, setFinalEtatFilter] = useState("tous");
+
+  // Date interval filters
+  const [semiDateFrom, setSemiDateFrom] = useState("");
+  const [semiDateTo, setSemiDateTo] = useState("");
+  const [finalDateFrom, setFinalDateFrom] = useState("");
+  const [finalDateTo, setFinalDateTo] = useState("");
+
+  // Type filters
+  const [semiTypeFilter, setSemiTypeFilter] = useState("tous");
+  const [finalTypeFilter, setFinalTypeFilter] = useState("tous");
 
   // Edit states
   const [editingItem, setEditingItem] = useState(null);
@@ -100,9 +111,9 @@ export default function ServiceStockCard() {
       return;
     }
     try {
-      const body = { type: finalForm.type, quantiteKg: Number(finalForm.quantiteKg) };
+      const body = { type: finalForm.type, quantiteKg: Number(finalForm.quantiteKg), commentaire: finalForm.commentaire || "" };
       await axios.post(`${API}/final`, body);
-      setFinalForm({ type: "base", quantiteKg: "" });
+      setFinalForm({ type: "base", quantiteKg: "", commentaire: "" });
       fetchAll();
     } catch (err) {
       alert(err.response?.data?.message || "Erreur lors de l'ajout");
@@ -375,12 +386,24 @@ export default function ServiceStockCard() {
   const sortIcon = (order) =>
     order === "asc" ? "↑" : order === "desc" ? "↓" : "↕";
 
+  // Date interval helper
+  const inDateInterval = (createdAt, from, to) => {
+    if (!createdAt) return !from && !to;
+    const d = new Date(createdAt).toISOString().slice(0, 10);
+    if (from && d < from) return false;
+    if (to && d > to) return false;
+    return true;
+  };
+
   const filteredSemiPrets = sortByQuantity(
-    semiPrets.filter(
-      (s) =>
+    semiPrets.filter((s) => {
+      const matchSearch =
         s.nom.toLowerCase().includes(semiSearch.toLowerCase()) ||
-        (s.type && s.type.toLowerCase().includes(semiSearch.toLowerCase()))
-    ),
+        (s.type && s.type.toLowerCase().includes(semiSearch.toLowerCase()));
+      const matchType = semiTypeFilter === "tous" || s.type === semiTypeFilter;
+      const matchDate = inDateInterval(s.createdAt, semiDateFrom, semiDateTo);
+      return matchSearch && matchType && matchDate;
+    }),
     semiSortOrder
   );
 
@@ -389,10 +412,15 @@ export default function ServiceStockCard() {
       const matchSearch = f.nom.toLowerCase().includes(finalSearch.toLowerCase()) ||
         (f.type && f.type.toLowerCase().includes(finalSearch.toLowerCase()));
       const matchEtat = finalEtatFilter === "tous" || f.etat === finalEtatFilter;
-      return matchSearch && matchEtat;
+      const matchType = finalTypeFilter === "tous" || f.type === finalTypeFilter;
+      const matchDate = inDateInterval(f.createdAt, finalDateFrom, finalDateTo);
+      return matchSearch && matchEtat && matchType && matchDate;
     }),
     finalSortOrder
   );
+
+  const semiTotalQty = filteredSemiPrets.reduce((s, x) => s + (Number(x.quantiteKg) || 0), 0);
+  const finalTotalQty = filteredFinals.reduce((s, x) => s + (Number(x.quantiteKg) || 0), 0);
 
   // Pagination helpers
   const paginatedSemiPrets = filteredSemiPrets.slice((semiPage - 1) * itemsPerPage, semiPage * itemsPerPage);
@@ -401,18 +429,15 @@ export default function ServiceStockCard() {
   const paginatedFinals = filteredFinals.slice((finalPage - 1) * itemsPerPage, finalPage * itemsPerPage);
   const finalTotalPages = Math.ceil(filteredFinals.length / itemsPerPage);
 
-  const PaginationBar = ({ currentPage, totalPages, setPage }) => {
-    if (totalPages <= 1) return null;
-    return (
-      <div className="flex justify-center space-x-2 mt-4">
-        {Array.from({ length: totalPages }, (_, i) => (
-          <button key={i + 1} onClick={() => setPage(i + 1)} className={`px-3 py-1 rounded text-sm ${currentPage === i + 1 ? "bg-purple-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}>
-            {i + 1}
-          </button>
-        ))}
-      </div>
-    );
-  };
+  const PaginationBar = ({ currentPage, totalPages, setPage }) => (
+    <SmartPagination
+      currentPage={currentPage}
+      totalPages={totalPages}
+      setPage={setPage}
+      activeClass="bg-purple-600 text-white"
+      inactiveClass="bg-gray-200 text-gray-700 hover:bg-gray-300"
+    />
+  );
 
   const generateStockPDF = () => {
     const doc = new jsPDF();
@@ -528,12 +553,29 @@ export default function ServiceStockCard() {
         {activeTab === "semi" && (
           <div>
             <h3 className="text-lg font-bold text-gray-700 mb-4">Produit Semi-Prêt (Achat direct)</h3>
-            <input
-              className="border rounded px-3 py-2 text-sm mb-4 w-full"
-              placeholder="Rechercher par nom ou type..."
-              value={semiSearch}
-              onChange={(e) => setSemiSearch(e.target.value)}
-            />
+            <div className="flex flex-wrap gap-3 mb-4 items-center">
+              <input
+                className="border rounded px-3 py-2 text-sm flex-1 min-w-[200px]"
+                placeholder="Rechercher par nom ou type..."
+                value={semiSearch}
+                onChange={(e) => setSemiSearch(e.target.value)}
+              />
+              <select className="border rounded px-3 py-2 text-sm" value={semiTypeFilter} onChange={(e) => setSemiTypeFilter(e.target.value)}>
+                <option value="tous">Tous types</option>
+                <option value="base">Base</option>
+                <option value="bargataire">Bargataire</option>
+              </select>
+              <label className="text-xs text-gray-600">Du:</label>
+              <input type="date" className="border rounded px-2 py-2 text-sm" value={semiDateFrom} onChange={(e) => setSemiDateFrom(e.target.value)} />
+              <label className="text-xs text-gray-600">Au:</label>
+              <input type="date" className="border rounded px-2 py-2 text-sm" value={semiDateTo} onChange={(e) => setSemiDateTo(e.target.value)} />
+              {(semiDateFrom || semiDateTo) && (
+                <button type="button" onClick={() => { setSemiDateFrom(""); setSemiDateTo(""); }} className="text-xs text-red-600 hover:underline">Réinitialiser</button>
+              )}
+            </div>
+            <div className="mb-4 bg-purple-50 border border-purple-200 rounded px-4 py-2 text-sm text-purple-800">
+              <strong>Quantité Totale (filtrée):</strong> {semiTotalQty.toFixed(2)} kg <span className="text-gray-500">— {filteredSemiPrets.length} article(s)</span>
+            </div>
             <form onSubmit={handleAddSemiPret} className="flex flex-wrap gap-3 mb-6 items-end">
               <input className="border rounded px-3 py-2 text-sm" placeholder="Nom" required value={semiPretForm.nom} onChange={(e) => setSemiPretForm({ ...semiPretForm, nom: e.target.value })} />
               <select className="border rounded px-3 py-2 text-sm" value={semiPretForm.type} onChange={(e) => setSemiPretForm({ ...semiPretForm, type: e.target.value })}>
@@ -587,7 +629,7 @@ export default function ServiceStockCard() {
             </div>
             <div className="flex flex-wrap gap-3 mb-4 items-center">
               <input
-                className="border rounded px-3 py-2 text-sm flex-1"
+                className="border rounded px-3 py-2 text-sm flex-1 min-w-[200px]"
                 placeholder="Rechercher par nom ou type..."
                 value={finalSearch}
                 onChange={(e) => setFinalSearch(e.target.value)}
@@ -601,12 +643,28 @@ export default function ServiceStockCard() {
                 <option value="dispo">Disponible</option>
                 <option value="vendu">Vendu</option>
               </select>
+              <select className="border rounded px-3 py-2 text-sm" value={finalTypeFilter} onChange={(e) => setFinalTypeFilter(e.target.value)}>
+                <option value="tous">Tous types</option>
+                <option value="base">Base</option>
+                <option value="bargataire">Bargataire</option>
+              </select>
+              <label className="text-xs text-gray-600">Du:</label>
+              <input type="date" className="border rounded px-2 py-2 text-sm" value={finalDateFrom} onChange={(e) => setFinalDateFrom(e.target.value)} />
+              <label className="text-xs text-gray-600">Au:</label>
+              <input type="date" className="border rounded px-2 py-2 text-sm" value={finalDateTo} onChange={(e) => setFinalDateTo(e.target.value)} />
+              {(finalDateFrom || finalDateTo) && (
+                <button type="button" onClick={() => { setFinalDateFrom(""); setFinalDateTo(""); }} className="text-xs text-red-600 hover:underline">Réinitialiser</button>
+              )}
+            </div>
+            <div className="mb-4 bg-pink-50 border border-pink-200 rounded px-4 py-2 text-sm text-pink-800">
+              <strong>Quantité Totale (filtrée):</strong> {finalTotalQty.toFixed(2)} kg <span className="text-gray-500">— {filteredFinals.length} article(s)</span>
             </div>
             <form onSubmit={handleAddFinal} className="flex flex-wrap gap-3 mb-6 items-end">
               <select className="border rounded px-3 py-2 text-sm" value={finalForm.type} onChange={(e) => setFinalForm({ ...finalForm, type: e.target.value })}>
                 <option value="base">Base</option><option value="bargataire">Bargataire</option>
               </select>
               <input className="border rounded px-3 py-2 text-sm w-28" type="number" min="0.01" step="0.01" placeholder="Quantité (kg)" required value={finalForm.quantiteKg} onChange={(e) => setFinalForm({ ...finalForm, quantiteKg: e.target.value })} />
+              <input className="border rounded px-3 py-2 text-sm flex-1 min-w-[200px]" type="text" placeholder="Commentaire (optionnel)" value={finalForm.commentaire} onChange={(e) => setFinalForm({ ...finalForm, commentaire: e.target.value })} />
               <span className="text-sm text-gray-500">Stock SP Base: <strong className="text-purple-700">{(counters.semiPretBase || 0).toFixed(2)} kg</strong> | SP Bargataire: <strong className="text-purple-700">{(counters.semiPretbargataire || 0).toFixed(2)} kg</strong></span>
               <button type="submit" className="bg-pink-600 text-white px-4 py-2 rounded text-sm hover:bg-pink-700">Ajouter</button>
             </form>
@@ -666,6 +724,12 @@ export default function ServiceStockCard() {
                 <label className="block text-sm font-medium text-gray-600 mb-1">Quantité (kg)</label>
                 <input className="border rounded px-3 py-2 text-sm w-full" type="number" min="0" step="0.01" required value={editForm.quantiteKg || ""} onChange={(e) => setEditForm({ ...editForm, quantiteKg: Number(e.target.value) })} />
               </div>
+              {editingItem.category === "final" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Commentaire (optionnel)</label>
+                  <textarea className="border rounded px-3 py-2 text-sm w-full" rows={2} value={editForm.commentaire || ""} onChange={(e) => setEditForm({ ...editForm, commentaire: e.target.value })} />
+                </div>
+              )}
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={cancelEdit} className="px-4 py-2 text-sm bg-gray-300 rounded hover:bg-gray-400">Annuler</button>
                 <button type="submit" className="px-4 py-2 text-sm bg-purple-600 text-white rounded hover:bg-purple-700">Enregistrer</button>

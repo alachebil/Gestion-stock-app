@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { FaTrashAlt } from "react-icons/fa";
+import SmartPagination from "../Pagination/SmartPagination";
 
 export default function CardTable() {
   const [bls, setBls] = useState([]);
@@ -140,24 +141,13 @@ export default function CardTable() {
 
         {/* Pagination controls */}
         <div className="px-4 py-3">
-          <nav>
-            <ul className="flex justify-center space-x-2">
-              {Array.from({ length: Math.ceil(bls.length / blsPerPage) }, (_, index) => (
-                <li key={index + 1}>
-                  <button
-                    onClick={() => paginate(index + 1)}
-                    className={`px-4 py-2 rounded ${
-                      currentPage === index + 1
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-700 text-white"
-                    }`}
-                  >
-                    {index + 1}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </nav>
+          <SmartPagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(bls.length / blsPerPage)}
+            setPage={paginate}
+            activeClass="bg-blue-500 text-white"
+            inactiveClass="bg-gray-700 text-white"
+          />
         </div>
       </div>
     </>
