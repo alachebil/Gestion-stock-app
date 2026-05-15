@@ -424,13 +424,13 @@ export default function FactureTable() {
         {/* Search filters */}
         <div className="flex flex-wrap gap-3 px-6 py-3 items-center bg-gray-700">
           <input
-            className="border rounded px-3 py-2 text-sm bg-gray-600 text-white placeholder-gray-400"
+            className="border rounded px-3 py-2 text-sm bg-green-100 text-black placeholder-gray-400"
             placeholder="Rechercher par fournisseur..."
             value={searchFournisseur}
             onChange={(e) => { setSearchFournisseur(e.target.value); setCurrentPage(1); }}
           />
           <input
-            className="border rounded px-3 py-2 text-sm bg-gray-600 text-white placeholder-gray-400"
+            className="border rounded px-3 py-2 text-sm bg-green-100 text-black placeholder-gray-400"
             placeholder="Rechercher par référence..."
             value={searchReference}
             onChange={(e) => { setSearchReference(e.target.value); setCurrentPage(1); }}
