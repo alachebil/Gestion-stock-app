@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import axios from "axios";
 import { Chart } from "chart.js/auto";
+import SmartPagination from "../../components/Pagination/SmartPagination";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -262,28 +263,13 @@ export default function Dashboard() {
       </div>
 
       {/* Pagination */}
-      {historyTotalPages > 1 && (
-        <div className="px-4 py-3">
-          <nav>
-            <ul className="flex justify-center space-x-2">
-              {Array.from({ length: historyTotalPages }, (_, index) => (
-                <li key={index + 1}>
-                  <button
-                    onClick={() => setHistoryPage(index + 1)}
-                    className={`px-4 py-2 rounded ${
-                      historyPage === index + 1
-                        ? "bg-green-500 text-white"
-                        : "bg-gray-700 text-white"
-                    }`}
-                  >
-                    {index + 1}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </div>
-      )}
+      <SmartPagination
+        currentPage={historyPage}
+        totalPages={historyTotalPages}
+        setPage={setHistoryPage}
+        activeClass="bg-green-500 text-white"
+        inactiveClass="bg-gray-700 text-white hover:bg-gray-600"
+      />
     </div>
   );
 }

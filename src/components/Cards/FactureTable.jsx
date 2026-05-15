@@ -16,6 +16,7 @@ export default function FactureTable() {
   const [sortField, setSortField] = useState(null);
   const [sortOrder, setSortOrder] = useState("asc");
   const [searchFournisseur, setSearchFournisseur] = useState("");
+  const [searchReference, setSearchReference] = useState("");
   const [searchDateFrom, setSearchDateFrom] = useState("");
   const [searchDateTo, setSearchDateTo] = useState("");
   const [form, setForm] = useState({
@@ -270,10 +271,11 @@ export default function FactureTable() {
   const sortedFactures = [...factures]
     .filter((f) => {
       const matchFournisseur = !searchFournisseur || f.nomFournisseur.toLowerCase().includes(searchFournisseur.toLowerCase());
+      const matchRef = !searchReference || (f.refMatierePremiere || "").toLowerCase().includes(searchReference.toLowerCase());
       const dateStr = f.dateLivraison ? f.dateLivraison.split("T")[0] : "";
       const matchFrom = !searchDateFrom || (dateStr && dateStr >= searchDateFrom);
       const matchTo = !searchDateTo || (dateStr && dateStr <= searchDateTo);
-      return matchFournisseur && matchFrom && matchTo;
+      return matchFournisseur && matchRef && matchFrom && matchTo;
     })
     .sort((a, b) => {
     if (!sortField) return 0;
@@ -427,6 +429,12 @@ export default function FactureTable() {
             value={searchFournisseur}
             onChange={(e) => { setSearchFournisseur(e.target.value); setCurrentPage(1); }}
           />
+          <input
+            className="border rounded px-3 py-2 text-sm bg-gray-600 text-white placeholder-gray-400"
+            placeholder="Rechercher par référence..."
+            value={searchReference}
+            onChange={(e) => { setSearchReference(e.target.value); setCurrentPage(1); }}
+          />
           <label className="text-white text-sm">Du:</label>
           <input
             className="border rounded px-3 py-2 text-sm bg-gray-600 text-white"
@@ -441,10 +449,10 @@ export default function FactureTable() {
             value={searchDateTo}
             onChange={(e) => { setSearchDateTo(e.target.value); setCurrentPage(1); }}
           />
-          {(searchFournisseur || searchDateFrom || searchDateTo) && (
+          {(searchFournisseur || searchReference || searchDateFrom || searchDateTo) && (
             <button
               className="bg-gray-500 text-white px-3 py-2 rounded text-sm hover:bg-gray-400"
-              onClick={() => { setSearchFournisseur(""); setSearchDateFrom(""); setSearchDateTo(""); setCurrentPage(1); }}
+              onClick={() => { setSearchFournisseur(""); setSearchReference(""); setSearchDateFrom(""); setSearchDateTo(""); setCurrentPage(1); }}
             >
               Réinitialiser
             </button>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { FaTrashAlt } from "react-icons/fa";
+import SmartPagination from "../Pagination/SmartPagination";
 
 export default function ReclamationTable() {
   const [reclamations, setReclamations] = useState([]);
@@ -184,25 +185,13 @@ export default function ReclamationTable() {
         </div>
 
         {/* Pagination Controls */}
-        <div className="flex justify-center mt-4">
-          <button
-            className="px-4 py-2 bg-gray-600 text-white rounded-l"
-            onClick={() => currentPage > 1 && paginate(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
-            Previous
-          </button>
-          <span className="px-4 py-2 bg-gray-600 text-white">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            className="px-4 py-2 bg-gray-600 text-white rounded-r"
-            onClick={() => currentPage < totalPages && paginate(currentPage + 1)}
-            disabled={currentPage === totalPages}
-          >
-            Next
-          </button>
-        </div>
+        <SmartPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          setPage={setCurrentPage}
+          activeClass="bg-blue-600 text-white"
+          inactiveClass="bg-gray-600 text-white hover:bg-gray-500"
+        />
       </div>
     </>
   );

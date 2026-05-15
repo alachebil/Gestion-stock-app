@@ -127,9 +127,9 @@ export default function Sidebar() {
                   <i className={`${iconClass("/admin/factures")} fa-file-invoice`}></i>{" "}
                   <span className="relative">
                     <span className="absolute inset-0 text-black opacity-30 blur-md -z-10">
-                      Gestion Factures
+                      Gestion d'Achats
                     </span>
-                    <span className="drop-shadow-lg">Gestion Factures</span>
+                    <span className="drop-shadow-lg">Gestion d'Achats</span>
                   </span>
                 </Link>
               </li>

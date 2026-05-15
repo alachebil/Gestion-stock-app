@@ -64,6 +64,7 @@ export default function StockCard() {
   const [chauffeur, setChauffeur] = useState("");
   const [matriculation, setMatriculation] = useState("");
   const [montantPaye, setMontantPaye] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("espece");
 
   // Demo states
   const [showDemoPopup, setShowDemoPopup] = useState(false);
@@ -232,8 +233,16 @@ export default function StockCard() {
     return total;
   };
 
-  const generateVentePDF = (vente, clientObj, montantPayeValue) => {
-    const doc = new jsPDF();
+  const formatDdMmYyyy = (d) => {
+    const dt = new Date(d);
+    const dd = String(dt.getDate()).padStart(2, "0");
+    const mm = String(dt.getMonth() + 1).padStart(2, "0");
+    const yyyy = dt.getFullYear();
+    return `${dd}${mm}${yyyy}`;
+  };
+
+  // Shared header + client/products/prix block. Returns the next Y position.
+  const drawVenteCommonBody = (doc, vente, clientObj, title, fileBaseName) => {
     doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
     doc.text("Sté RPL industrie", 10, 18, { align: "left" });
@@ -245,9 +254,10 @@ export default function StockCard() {
     doc.text("T.V.A: 1978076 L/A/M/000", 10, 33, { align: "left" });
     doc.setFontSize(20);
     const pageWidth = doc.internal.pageSize.getWidth();
-    doc.text("Bon de Livraison", pageWidth - 10, 18, { align: "right" });
+    doc.text(title, pageWidth - 10, 18, { align: "right" });
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
+    doc.text(fileBaseName, pageWidth - 10, 26, { align: "right" });
     doc.text(`Date: ${new Date(vente.dateVente).toLocaleDateString("fr-FR")} , Téboulba`, 20, 38);
     doc.setDrawColor(41, 128, 185);
     doc.setLineWidth(0.5);
@@ -291,7 +301,12 @@ export default function StockCard() {
       theme: "grid",
       headStyles: { fillColor: [39, 174, 96] },
     });
-    y = (doc.lastAutoTable?.finalY || y) + 10;
+    return (doc.lastAutoTable?.finalY || y) + 10;
+  };
+
+  const generateBLPDF = (vente, clientObj, montantPayeValue, fileBaseName) => {
+    const doc = new jsPDF();
+    let y = drawVenteCommonBody(doc, vente, clientObj, "Bon de Livraison", fileBaseName);
 
     doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
@@ -307,8 +322,42 @@ export default function StockCard() {
         doc.setTextColor(0, 0, 0);
       }
     }
+    doc.save(`${fileBaseName}.pdf`);
+  };
 
-    doc.save(`bon_de_vente_${clientObj.nom}_${new Date().toISOString().split("T")[0]}.pdf`);
+  const generateFacturePDF = (vente, clientObj, fileBaseName) => {
+    const doc = new jsPDF();
+    let y = drawVenteCommonBody(doc, vente, clientObj, "Facture", fileBaseName);
+
+    const ht = Number(vente.totalGeneral) || 0;
+    const tva = ht * 0.19;
+    const timbre = 1;
+    const ttc = ht + tva + timbre;
+
+    doc.setFont("helvetica", "bold");
+    doc.text("Totaux:", 20, y);
+    y += 4;
+    autoTable(doc, {
+      startY: y,
+      head: [["Désignation", "Montant (TND)"]],
+      body: [
+        ["Montant HT", ht.toFixed(3)],
+        ["TVA 19%", tva.toFixed(3)],
+        ["Timbre fiscal", timbre.toFixed(3)],
+        ["Total TTC", ttc.toFixed(3)],
+      ],
+      theme: "grid",
+      headStyles: { fillColor: [142, 68, 173] },
+      bodyStyles: { fontStyle: "bold" },
+    });
+    doc.save(`${fileBaseName}.pdf`);
+  };
+
+  const generateVentePDF = (vente, clientObj, montantPayeValue) => {
+    const dateStr = formatDdMmYyyy(vente.dateVente || new Date());
+    const idx = vente.dailyIndex || 1;
+    generateBLPDF(vente, clientObj, montantPayeValue, `BL${dateStr}-${idx}`);
+    generateFacturePDF(vente, clientObj, `FAC${dateStr}-${idx}`);
   };
 
   // Demo grouped/total helpers
@@ -359,6 +408,7 @@ export default function StockCard() {
   const handleSubmitVente = async () => {
     if (!selectedClientId) { alert("Sélectionnez un client"); return; }
     if (!chauffeur || !matriculation) { alert("Remplissez chauffeur et matriculation"); return; }
+    if (!paymentMethod) { alert("Sélectionnez un moyen de paiement"); return; }
     const prixParType = [];
     if (groupedSelected.base) {
       if (!prixKgBase || Number(prixKgBase) <= 0) { alert("Entrez un prix/kg pour le type Base"); return; }
@@ -377,6 +427,7 @@ export default function StockCard() {
         chauffeur,
         matriculation,
         source: "production",
+        paymentMethod,
         ...(montantPayeVal !== null && { montantPaye: montantPayeVal }),
       });
       const clientObj = clients.find((c) => c._id === selectedClientId);
@@ -390,6 +441,7 @@ export default function StockCard() {
       setChauffeur("");
       setMatriculation("");
       setMontantPaye("");
+      setPaymentMethod("espece");
       fetchAll();
     } catch (err) {
       alert(err.response?.data?.message || "Erreur lors de la vente");
@@ -793,7 +845,7 @@ export default function StockCard() {
               <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">Ajouter</button>
             </form>
             <table className="w-full text-sm text-left">
-              <thead className="bg-gray-100"><tr><th className="px-4 py-2"><input type="checkbox" onChange={selectAllDispo} checked={filteredFinals.filter(f => f.etat === "dispo").length > 0 && filteredFinals.filter(f => f.etat === "dispo").every(f => selectedIds.includes(f._id))} /></th><th className="px-4 py-2">Nom</th><th className="px-4 py-2">Type</th><th className="px-4 py-2 cursor-pointer select-none" onClick={() => toggleSort(finalSortOrder, setFinalSortOrder)}>Quantité (kg) {sortIcon(finalSortOrder)}</th><th className="px-4 py-2">Commentaire</th><th className="px-4 py-2">État</th><th className="px-4 py-2">Actions</th></tr></thead>
+              <thead className="bg-gray-100"><tr><th className="px-4 py-2"><input type="checkbox" onChange={selectAllDispo} checked={filteredFinals.filter(f => f.etat === "dispo").length > 0 && filteredFinals.filter(f => f.etat === "dispo").every(f => selectedIds.includes(f._id))} /></th><th className="px-4 py-2">Nom</th><th className="px-4 py-2">Type</th><th className="px-4 py-2 cursor-pointer select-none" onClick={() => toggleSort(finalSortOrder, setFinalSortOrder)}>Quantité (kg) {sortIcon(finalSortOrder)}</th><th className="px-4 py-2">Commentaire</th><th className="px-4 py-2">Date</th><th className="px-4 py-2">État</th><th className="px-4 py-2">Actions</th></tr></thead>
               <tbody>
                 {paginatedFinals.map((f) => (
                   <tr key={f._id} className={`border-b hover:bg-gray-50 ${selectedIds.includes(f._id) ? "bg-indigo-50" : ""}`}>
@@ -806,6 +858,7 @@ export default function StockCard() {
                     <td className="px-4 py-2"><span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">{f.type}</span></td>
                     <td className="px-4 py-2 font-semibold">{f.quantiteKg}</td>
                     <td className="px-4 py-2 text-xs text-gray-600 max-w-[150px] truncate" title={f.commentaire || ""}>{f.commentaire || "—"}</td>
+                    <td className="px-4 py-2 text-xs text-gray-600">{f.createdAt ? new Date(f.createdAt).toLocaleDateString("fr-FR") : "—"}</td>
                     <td className="px-4 py-2">
                       <span
                         className={`w-24 inline-block text-center px-3 py-1 rounded-full text-white text-xs font-bold ${f.etat === "vendu" ? "bg-red-500" : "bg-green-500"}`}
@@ -815,7 +868,6 @@ export default function StockCard() {
                     </td>
                     <td className="px-4 py-2">
                       <button onClick={() => startEdit("final", f)} className="text-blue-500 hover:text-blue-700 text-xs mr-2"><i className="fas fa-edit"></i></button>
-                      <button onClick={() => handleDelete("final", f._id)} className="text-red-500 hover:text-red-700 text-xs"><i className="fas fa-trash"></i></button>
                     </td>
                   </tr>
                 ))}
@@ -1011,6 +1063,16 @@ export default function StockCard() {
               {montantPaye && Number(montantPaye) < calcTotal() && (
                 <p className="text-xs text-orange-600 mt-1">Reste à payer: {(calcTotal() - Number(montantPaye)).toFixed(2)} TND</p>
               )}
+            </div>
+
+            {/* Moyen de paiement */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-600 mb-1">Moyen de paiement</label>
+              <select className="border rounded px-3 py-2 text-sm w-full" value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
+                <option value="espece">Espèces</option>
+                <option value="versement">Versement</option>
+                <option value="virement">Virement</option>
+              </select>
             </div>
 
             {/* Actions */}

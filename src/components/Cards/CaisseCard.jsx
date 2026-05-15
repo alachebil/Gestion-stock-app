@@ -213,6 +213,7 @@ export default function CaisseCard() {
               <th className="px-4 py-2">Type</th>
               <th className="px-4 py-2">Description</th>
               <th className="px-4 py-2">Montant</th>
+              <th className="px-4 py-2">Paiement</th>
               <th className="px-4 py-2">Date</th>
               <th className="px-4 py-2">Actions</th>
             </tr>
@@ -227,6 +228,11 @@ export default function CaisseCard() {
                 </td>
                 <td className="px-4 py-2">{e.description}</td>
                 <td className="px-4 py-2 font-semibold">{e.montant.toFixed(2)} TND</td>
+                <td className="px-4 py-2 text-xs">
+                  {e.paymentMethod
+                    ? (e.paymentMethod === "espece" ? "Espèces" : e.paymentMethod === "versement" ? "Versement" : "Virement")
+                    : "—"}
+                </td>
                 <td className="px-4 py-2">{formatDate(e.date)}</td>
                 <td className="px-4 py-2">
                   <button onClick={() => handleDelete(e._id)} className="text-red-500 hover:text-red-700 text-xs"><i className="fas fa-trash"></i></button>

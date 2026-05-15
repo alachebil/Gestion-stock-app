@@ -24,7 +24,7 @@ export default function SmartPagination({
   const baseBtn = "px-3 py-2 rounded text-sm";
   const arrowBtn = `${baseBtn} ${inactiveClass} disabled:opacity-40 disabled:cursor-not-allowed`;
 
-  // Simple case: show all pages
+  // Simple case: show all pages as numbered buttons
   if (totalPages <= 5) {
     return (
       <div className="px-4 py-3">

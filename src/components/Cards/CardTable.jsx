@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { FaTrashAlt } from "react-icons/fa";
+import SmartPagination from "../Pagination/SmartPagination";
 
 export default function CardTable() {
   const [users, setUsers] = useState([]);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     axios
@@ -55,6 +58,9 @@ export default function CardTable() {
       );
   };
 
+  const totalPages = Math.ceil(users.length / itemsPerPage);
+  const paginatedUsers = users.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   return (
     <>
       {error && <div className="alert alert-danger">{error}</div>}
@@ -93,7 +99,7 @@ export default function CardTable() {
               </tr>
             </thead>
             <tbody>
-              {users.map((user) => (
+              {paginatedUsers.map((user) => (
                 <tr key={user._id} className="bg-gray-800 hover:bg-gray-700">
                   <td className="border-t-0 px-6 align-middle border-l-0 border-r-0 text-sm p-4 text-left">
                     <img
@@ -139,6 +145,13 @@ export default function CardTable() {
             </tbody>
           </table>
         </div>
+        <SmartPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          setPage={setCurrentPage}
+          activeClass="bg-blue-600 text-white"
+          inactiveClass="bg-gray-600 text-white hover:bg-gray-500"
+        />
       </div>
     </>
   );
