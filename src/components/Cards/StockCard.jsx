@@ -296,7 +296,7 @@ export default function StockCard() {
     y += 4;
     autoTable(doc, {
       startY: y,
-      head: [["Type", "Quantité totale (kg)", "Prix/kg (TND)", "Sous-total (TND)"]],
+      head: [["Type", "Quantité totale (kg)", "Prix unitaire", "Sous-total (TND)"]],
       body: vente.prixParType.map((pt) => [pt.type, pt.totalKg.toFixed(2), pt.prixKg.toFixed(2), pt.sousTotal.toFixed(2)]),
       theme: "grid",
       headStyles: { fillColor: [39, 174, 96] },
@@ -354,24 +354,27 @@ export default function StockCard() {
     doc.setFontSize(9);
     doc.text(`Date: ${new Date(vente.dateVente).toLocaleDateString("fr-FR")} , Téboulba`, pageWidth - 10, 32, { align: "right" });
 
-    // Separator line (black)
-    doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(0.5);
-    doc.line(10, 37, pageWidth - 10, 37);
+    // // Separator line (black)
+    // doc.setDrawColor(0, 0, 0);
+    // doc.setLineWidth(0.5);
+    // doc.line(10, 37, pageWidth - 10, 37);
 
-    // Client info in a bordered box below the separator
+    // Client info in a bordered box on the RIGHT side, below the header
     let y = 42;
     const hasImmat = !!clientObj.immatriculationFiscale;
-    const boxH = hasImmat ? 20 : 14;
+    const boxH = hasImmat ? 27 : 22;
+    const boxW = pageWidth * 0.44;
     doc.setLineWidth(0.3);
-    doc.rect(10, y, pageWidth - 20, boxH);
+    const boxX = pageWidth - 10 - boxW + 3;
+    doc.rect(boxX, y, boxW, boxH);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
-    doc.text("Client:", 13, y + 6);
+    doc.text("Client:", boxX + 3, y + 6);
     doc.setFont("helvetica", "normal");
-    doc.text(`${clientObj.nom}  |  Tél: ${clientObj.telephone}  |  Adresse: ${clientObj.adresse}`, 30, y + 6);
+    doc.text(clientObj.nom, boxX + 3, y + 13);
+    doc.text(`Tél: ${clientObj.telephone}  |  ${clientObj.adresse}`, boxX + 3, y + 19);
     if (hasImmat) {
-      doc.text(`Immatriculation Fiscale: ${clientObj.immatriculationFiscale}`, 13, y + 14);
+      doc.text(`Immat. Fiscale: ${clientObj.immatriculationFiscale}`, boxX + 3, y + 26);
     }
     y += boxH + 8;
 
@@ -387,7 +390,7 @@ export default function StockCard() {
 
     autoTable(doc, {
       startY: y,
-      head: [["Désignation", "Type", "Qté (kg)", "Prix/kg (TND)", "Montant HT (TND)", "TVA"]],
+      head: [["Désignation", "Type", "Qté (kg)", "Prix unitaire", "Montant HT (TND)", "TVA"]],
       body: tableRows,
       theme: "grid",
       headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.3 },
@@ -406,7 +409,6 @@ export default function StockCard() {
 
     autoTable(doc, {
       startY: y,
-      head: [["Désignation", "Montant (TND)"]],
       body: [
         ["Montant HT", ht.toFixed(3)],
         ["FODEC 1%", fodec.toFixed(3)],
