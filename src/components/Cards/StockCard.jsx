@@ -327,29 +327,101 @@ export default function StockCard() {
 
   const generateFacturePDF = (vente, clientObj, fileBaseName) => {
     const doc = new jsPDF();
-    let y = drawVenteCommonBody(doc, vente, clientObj, "Facture", fileBaseName);
+    const pageWidth = doc.internal.pageSize.getWidth();
 
-    const ht = Number(vente.totalGeneral) || 0;
-    const tva = ht * 0.19;
-    const timbre = 1;
-    const ttc = ht + tva + timbre;
+    // Random invoice number N° XX/XXXX
+    const rand2 = String(Math.floor(Math.random() * 90) + 10);
+    const rand4 = String(Math.floor(Math.random() * 9000) + 1000);
+    const invoiceNum = `N° ${rand2}/${rand4}`;
 
+    // Header — company info left
+    doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
-    doc.text("Totaux:", 20, y);
-    y += 4;
+    doc.text("Sté RPL industrie", 10, 18);
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "normal");
+    doc.text("Z.I : Avenue.Janvier 1952 Téboulba", 10, 23);
+    doc.text("Tél: 29 501 019", 10, 28);
+    doc.text("T.V.A: 1978076 L/A/M/000", 10, 33);
+
+    // Header — Facture title + invoice number right
+    doc.setFontSize(20);
+    doc.setFont("helvetica", "bold");
+    doc.text("Facture", pageWidth - 10, 18, { align: "right" });
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    doc.text(invoiceNum, pageWidth - 10, 26, { align: "right" });
+    doc.setFontSize(9);
+    doc.text(`Date: ${new Date(vente.dateVente).toLocaleDateString("fr-FR")} , Téboulba`, pageWidth - 10, 32, { align: "right" });
+
+    // Separator line (black)
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.5);
+    doc.line(10, 37, pageWidth - 10, 37);
+
+    // Client info in a bordered box below the separator
+    let y = 42;
+    const hasImmat = !!clientObj.immatriculationFiscale;
+    const boxH = hasImmat ? 20 : 14;
+    doc.setLineWidth(0.3);
+    doc.rect(10, y, pageWidth - 20, boxH);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.text("Client:", 13, y + 6);
+    doc.setFont("helvetica", "normal");
+    doc.text(`${clientObj.nom}  |  Tél: ${clientObj.telephone}  |  Adresse: ${clientObj.adresse}`, 30, y + 6);
+    if (hasImmat) {
+      doc.text(`Immatriculation Fiscale: ${clientObj.immatriculationFiscale}`, 13, y + 14);
+    }
+    y += boxH + 8;
+
+    // Combined products table: Désignation, Type, Qté, Prix/kg, Montant HT, TVA
+    const prixMap = {};
+    vente.prixParType.forEach((pt) => { prixMap[pt.type] = pt.prixKg; });
+
+    const tableRows = vente.produits.map((p) => {
+      const prixKg = prixMap[p.type] || 0;
+      const montantHT = p.quantiteKg * prixKg;
+      return [p.nom, p.type, p.quantiteKg.toFixed(2), prixKg.toFixed(3), montantHT.toFixed(3), "19%"];
+    });
+
+    autoTable(doc, {
+      startY: y,
+      head: [["Désignation", "Type", "Qté (kg)", "Prix/kg (TND)", "Montant HT (TND)", "TVA"]],
+      body: tableRows,
+      theme: "grid",
+      headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.3 },
+      bodyStyles: { textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.3 },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+    });
+    y = (doc.lastAutoTable?.finalY || y) + 10;
+
+    // Financial summary with FODEC
+    const ht = Number(vente.totalGeneral) || 0;
+    const fodec = ht * 0.01;
+    const baseTva = ht + fodec;
+    const tva = baseTva * 0.19;
+    const timbre = 1;
+    const netAPayer = ht + fodec + tva + timbre;
+
     autoTable(doc, {
       startY: y,
       head: [["Désignation", "Montant (TND)"]],
       body: [
         ["Montant HT", ht.toFixed(3)],
+        ["FODEC 1%", fodec.toFixed(3)],
+        ["Base TVA (HT + FODEC)", baseTva.toFixed(3)],
         ["TVA 19%", tva.toFixed(3)],
         ["Timbre fiscal", timbre.toFixed(3)],
-        ["Total TTC", ttc.toFixed(3)],
+        ["Net à payer (TTC)", netAPayer.toFixed(3)],
       ],
       theme: "grid",
-      headStyles: { fillColor: [142, 68, 173] },
-      bodyStyles: { fontStyle: "bold" },
+      headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.3 },
+      bodyStyles: { textColor: [0, 0, 0], lineColor: [0, 0, 0], lineWidth: 0.3 },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+      columnStyles: { 1: { halign: "right" } },
     });
+
     doc.save(`${fileBaseName}.pdf`);
   };
 
