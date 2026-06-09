@@ -246,11 +246,11 @@ export default function StockCard() {
     doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
     doc.text("Sté RPL industrie", 10, 18, { align: "left" });
-    doc.setFontSize(7);
+    doc.setFontSize(10);
     doc.text("Z.I : Avenue.Janvier 1952 Téboulba", 10, 23, { align: "left" });
-    doc.setFontSize(7);
+    doc.setFontSize(10);
     doc.text("Tél: 29 501 019", 10, 28, { align: "left" });
-    doc.setFontSize(7);
+    doc.setFontSize(10);
     doc.text("T.V.A: 1978076 L/A/M/000", 10, 33, { align: "left" });
     doc.setFontSize(20);
     const pageWidth = doc.internal.pageSize.getWidth();
