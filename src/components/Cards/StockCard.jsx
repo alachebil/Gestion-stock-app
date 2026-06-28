@@ -241,6 +241,17 @@ export default function StockCard() {
     return `${dd}${mm}${yyyy}`;
   };
 
+  // Sequential invoice number: N° XX/XXXX (increments per year)
+  const getNextInvoiceNumber = () => {
+    const year = new Date().getFullYear();
+    const prefix = String(year).slice(-2);
+    const storageKey = `factureCounter_${year}`;
+    const current = Number(localStorage.getItem(storageKey) || "0");
+    const next = current + 1;
+    localStorage.setItem(storageKey, String(next));
+    return `N° ${prefix}/${String(next).padStart(4, "0")}`;
+  };
+
   // Shared header + client/products/prix block. Returns the next Y position.
   const drawVenteCommonBody = (doc, vente, clientObj, title, fileBaseName) => {
     doc.setFontSize(20);
@@ -329,10 +340,8 @@ export default function StockCard() {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
 
-    // Random invoice number N° XX/XXXX
-    const rand2 = String(Math.floor(Math.random() * 90) + 10);
-    const rand4 = String(Math.floor(Math.random() * 9000) + 1000);
-    const invoiceNum = `N° ${rand2}/${rand4}`;
+    // Sequential invoice number N° XX/XXXX
+    const invoiceNum = getNextInvoiceNumber();
 
     // Header — company info left
     doc.setFontSize(20);
