@@ -342,6 +342,9 @@ export default function StockCard() {
 
     // Sequential invoice number N° XX/XXXX
     const invoiceNum = getNextInvoiceNumber();
+    const invoiceNumForFile = invoiceNum
+      .replace("N° ", "")
+      .replace("/", "-");
 
     // Header — company info left
     doc.setFontSize(20);
@@ -433,7 +436,7 @@ export default function StockCard() {
       columnStyles: { 1: { halign: "right" } },
     });
 
-    doc.save(`${fileBaseName}.pdf`);
+    doc.save(`FAC${invoiceNumForFile}.pdf`);
   };
 
   const generateVentePDF = (vente, clientObj, montantPayeValue) => {
