@@ -4,9 +4,9 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import SmartPagination from "../Pagination/SmartPagination";
 
-const API = "http://localhost:3000/service-stock";
-const CLIENT_API = "http://localhost:3000/client";
-const VENTE_API = "http://localhost:3000/vente";
+const API = "/service-stock";
+const CLIENT_API = "/client";
+const VENTE_API = "/vente";
 
 export default function ServiceStockCard() {
   const [summary, setSummary] = useState(null);

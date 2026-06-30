@@ -11,7 +11,7 @@ export default function CardTable() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:3000/users/")
+      .get("/users/")
       .then((response) => setUsers(response.data.users))
       .catch((err) =>
         setError(
@@ -24,7 +24,7 @@ export default function CardTable() {
 
   const deleteUser = (userId) => {
     axios
-      .delete(`http://localhost:3000/users/${userId}`)
+      .delete(`/users/${userId}`)
       .then(() => {
         setUsers(users.filter((user) => user._id !== userId));
       })
@@ -39,7 +39,7 @@ export default function CardTable() {
 
   const toggleRole = (userId) => {
     axios
-      .put(`http://localhost:3000/users/role/${userId}`)
+      .put(`/users/role/${userId}`)
       .then((response) => {
         setUsers(
           users.map((user) =>

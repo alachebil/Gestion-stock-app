@@ -38,7 +38,7 @@ export default function VmTable() {
   // Fonction pour charger les VMs du nœud sélectionné
   const loadVmsFromNode = (node) => {
     axios
-      .get(`http://localhost:3000/proxmox/get-vms/${node}`)
+      .get(`/proxmox/get-vms/${node}`)
       .then((response) => setVms(response.data.data))
       .catch((err) =>
         setError(
@@ -77,7 +77,7 @@ export default function VmTable() {
 
   const deleteVM = (vmid) => {
     axios
-      .delete(`http://localhost:3000/proxmox/delete-vm/${selectedNode}/${vmid}`)
+      .delete(`/proxmox/delete-vm/${selectedNode}/${vmid}`)
       .then(() => {
         setVms(vms.filter((vm) => vm.vmid !== vmid));
       })
@@ -94,7 +94,7 @@ export default function VmTable() {
     if (!vmid) return;
     
     axios
-      .get(`http://localhost:3000/proxmox/get-vm-stats/${selectedNode}/${vmid}`)
+      .get(`/proxmox/get-vm-stats/${selectedNode}/${vmid}`)
       .then((response) => {
         const data = response.data.data;
         setVmStats(data);
@@ -144,7 +144,7 @@ export default function VmTable() {
     setSelectedVmId(vmid);
     
     axios
-      .get(`http://localhost:3000/proxmox/get-vm-stats/${selectedNode}/${vmid}`)
+      .get(`/proxmox/get-vm-stats/${selectedNode}/${vmid}`)
       .then((response) => {
         setVmStats(response.data.data);
         
@@ -242,7 +242,7 @@ export default function VmTable() {
     e.preventDefault();
 
     axios
-      .post("http://localhost:3000/proxmox/create-vm", newVmData)
+      .post("/proxmox/create-vm", newVmData)
       .then((response) => {
         window.location.reload();
         setVms([...vms, response.data]);

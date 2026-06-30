@@ -18,7 +18,7 @@ function PipelinePage() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:3000/pipeline/get-pipelines")
+      .get("/pipeline/get-pipelines")
       .then((response) => setPipelines(response.data.data))
       .catch((err) =>
         setError(
@@ -55,7 +55,7 @@ function PipelinePage() {
 
     try {
       await axios.post(
-        `http://localhost:3000/pipeline/run-pipeline/${selectedPipeline.name}`
+        `/pipeline/run-pipeline/${selectedPipeline.name}`
       );
       alert("✅ Pipeline lancé avec succès !");
 
@@ -66,7 +66,7 @@ function PipelinePage() {
 
           for (let attempt = 0; attempt < 15; attempt++) {
             const buildInfo = await axios.get(
-              `http://localhost:3000/pipeline/building/${selectedPipeline.name}`
+              `/pipeline/building/${selectedPipeline.name}`
             );
 
             if (buildInfo.data.building) {
@@ -83,11 +83,11 @@ function PipelinePage() {
 
           intervalRef.current = setInterval(async () => {
             const buildInfo = await axios.get(
-              `http://localhost:3000/pipeline/building/${selectedPipeline.name}`
+              `/pipeline/building/${selectedPipeline.name}`
             );
 
             const stagesResponse = await axios.get(
-              `http://localhost:3000/pipeline/stages/${selectedPipeline.name}`
+              `/pipeline/stages/${selectedPipeline.name}`
             );
 
             const newStages = stagesResponse.data.data || [];

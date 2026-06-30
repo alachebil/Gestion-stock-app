@@ -55,7 +55,7 @@ export default function Profile() {
   const handleUpdateUser = async () => {
     try {
       const response = await axios.put(
-        `http://localhost:3000/users/${user._id}`,
+        `/users/${user._id}`,
         updatedUser
       );
 

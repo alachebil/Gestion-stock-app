@@ -55,7 +55,7 @@ export default function Register() {
     };
 
     try {
-      await axios.post("http://localhost:3000/users/register", userData, {
+      await axios.post("/users/register", userData, {
         headers: {
           "Content-Type": "application/json",
         },

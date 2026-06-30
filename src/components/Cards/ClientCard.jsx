@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import SmartPagination from "../Pagination/SmartPagination";
 
-const API = "http://localhost:3000/client";
+const API = "/client";
 
 export default function ClientCard() {
   const [clients, setClients] = useState([]);

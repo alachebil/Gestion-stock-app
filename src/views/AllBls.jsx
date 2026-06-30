@@ -16,7 +16,7 @@ function AllBls() {
   useEffect(() => {
     const fetchBls = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/bl");
+        const response = await axios.get("/bl");
         setBls(response.data);
       } catch (error) {
         console.error("Erreur lors de la récupération des BLs:", error);

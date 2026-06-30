@@ -12,7 +12,7 @@ export default function CardTable() {
   useEffect(() => {
     // Fetch BLs from the backend
     axios
-      .get("http://localhost:3000/bl/")
+      .get("/bl/")
       .then((response) => setBls(response.data)) // Use response.data directly
       .catch((err) =>
         setError(
@@ -25,7 +25,7 @@ export default function CardTable() {
 
   const deleteBl = (blId) => {
     axios
-      .delete(`http://localhost:3000/bl/${blId}`)
+      .delete(`/bl/${blId}`)
       .then(() => {
         // Remove deleted BL from the state
         setBls(bls.filter((bl) => bl._id !== blId));

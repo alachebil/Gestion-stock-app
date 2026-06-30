@@ -104,7 +104,7 @@ function UserBl() {
   const checkIfBlExists = async (parsedData) => {
     try {
       const response = await axios.get(
-        `http://localhost:3000/bl/ref/${parsedData.Referance}`
+        `/bl/ref/${parsedData.Referance}`
       );
       setBlData(response.data || null);
     } catch (error) {
@@ -143,12 +143,12 @@ function UserBl() {
     try {
       const response = blData
         ? blData.etatLivreur !== null && blData.etatLivreur !== undefined
-          ? await axios.post("http://localhost:3000/livraison", updatedData)
+          ? await axios.post("/livraison", updatedData)
           : await axios.put(
-              `http://localhost:3000/bl/${blData.ref}`,
+              `/bl/${blData.ref}`,
               updatedData
             )
-        : await axios.post("http://localhost:3000/bl", updatedData);
+        : await axios.post("/bl", updatedData);
 
       setBlData(response.data);
       closeModal();
@@ -280,7 +280,7 @@ function UserBl() {
     };
 
     try {
-      await axios.post("http://localhost:3000/reclamation", reclamationData);
+      await axios.post("/reclamation", reclamationData);
       alert("Réclamation soumise avec succès!");
       closeModal();
     } catch (error) {

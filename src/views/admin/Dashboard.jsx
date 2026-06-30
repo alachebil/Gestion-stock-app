@@ -23,7 +23,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchStockSummary = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/stock/summary");
+        const response = await axios.get("/stock/summary");
         const { matierePremieres, produitsSemiPrets, produitsFinals } = response.data;
 
         const mpTotal = matierePremieres.reduce((sum, m) => sum + m.totalKg, 0);
@@ -47,7 +47,7 @@ export default function Dashboard() {
 
     const fetchTransformations = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/stock/transformations");
+        const response = await axios.get("/stock/transformations");
         setTransformations(response.data);
       } catch (error) {
         console.error("Error fetching transformations:", error);
@@ -64,7 +64,7 @@ export default function Dashboard() {
 
   const refreshTransformations = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/stock/transformations");
+      const response = await axios.get("/stock/transformations");
       setTransformations(response.data);
     } catch (error) {
       console.error("Error fetching transformations:", error);
@@ -73,7 +73,7 @@ export default function Dashboard() {
 
   const deleteTransformation = async (id) => {
     try {
-      await axios.delete(`http://localhost:3000/stock/transformations/${id}`);
+      await axios.delete(`/stock/transformations/${id}`);
       await refreshTransformations();
     } catch (error) {
       console.error("Error deleting transformation:", error);

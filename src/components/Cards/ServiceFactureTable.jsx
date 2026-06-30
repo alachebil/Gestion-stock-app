@@ -4,7 +4,7 @@ import { FaTrashAlt, FaFilePdf, FaEdit } from "react-icons/fa";
 import { jsPDF } from "jspdf";
 import SmartPagination from "../Pagination/SmartPagination";
 
-const API = "http://localhost:3000/service-facture";
+const API = "/service-facture";
 
 export default function ServiceFactureTable() {
   const [factures, setFactures] = useState([]);

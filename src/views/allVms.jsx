@@ -25,7 +25,7 @@ function UserVms() {
     setError(null);
     
     axios
-      .get(`http://localhost:3000/proxmox/get-vms/${node}`)
+      .get(`/proxmox/get-vms/${node}`)
       .then((response) => {
         setVms(response.data.data);
         setLoading(false);

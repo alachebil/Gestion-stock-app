@@ -11,7 +11,7 @@ export default function ReclamationTable() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:3000/reclamation/")
+      .get("/reclamation/")
       .then((response) => setReclamations(response.data))
       .catch((err) =>
         setError(
@@ -24,7 +24,7 @@ export default function ReclamationTable() {
 
   const deleteReclamation = (reclamationId) => {
     axios
-      .delete(`http://localhost:3000/reclamation/${reclamationId}`)
+      .delete(`/reclamation/${reclamationId}`)
       .then(() => {
         setReclamations(reclamations.filter((reclamation) => reclamation._id !== reclamationId));
       })
@@ -45,7 +45,7 @@ export default function ReclamationTable() {
 
         // Update the reclamation in the backend
         axios
-          .put(`http://localhost:3000/reclamation/${reclamationId}`, updatedReclamation)
+          .put(`/reclamation/${reclamationId}`, updatedReclamation)
           .then(() => {
             setReclamations(
               reclamations.map((r) =>

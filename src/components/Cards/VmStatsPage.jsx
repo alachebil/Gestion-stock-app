@@ -19,7 +19,7 @@ export default function StatsPage() {
 
   useEffect(() => {
     axios
-      .get(`http://localhost:3000/proxmox/get-vm-stats/pve/${vmid}`)
+      .get(`/proxmox/get-vm-stats/pve/${vmid}`)
       .then((res) => {
         const data = res.data.data;
 

@@ -16,17 +16,17 @@ function Bl() {
     const fetchBlDetails = async () => {
       try {
         // Fetch BL data
-        const response = await axios.get(`http://localhost:3000/bl/${id}`);
+        const response = await axios.get(`/bl/${id}`);
         setBl(response.data); // Set BL data
         // Fetch reclamations related to the BL
         const reclamationResponse = await axios.get(
-          `http://localhost:3000/bl/${id}/reclamations`
+          `/bl/${id}/reclamations`
         );
         setReclamations(reclamationResponse.data); // Set reclamations data
 
         // Fetch livraisons related to the BL
         const livraisonResponse = await axios.get(
-          `http://localhost:3000/bl/${id}/livraisons`
+          `/bl/${id}/livraisons`
         );
         setLivraisons(livraisonResponse.data); // Set livraisons data
       } catch (error) {

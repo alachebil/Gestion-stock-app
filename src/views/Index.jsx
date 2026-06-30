@@ -1,4 +1,4 @@
-﻿import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbars/AuthNavbar";
 import Footer from "../components/Footers/Footer";
 import { useEffect, useState } from "react";
@@ -18,7 +18,7 @@ export default function Index() {
   useEffect(() => {
     const fetchSummary = async () => {
       try {
-        const res = await axios.get("http://localhost:3000/stock/summary");
+        const res = await axios.get("/stock/summary");
         setSummary(res.data);
       } catch (err) {
         console.error("Error fetching stock summary:", err);
@@ -51,7 +51,7 @@ export default function Index() {
                 RPL industrie
               </h1>
               <p className="mt-4 text-lg text-gray-300">
-                Gestion de stock - MatiÃ¨re premiÃ¨re, Produit semi-prÃªt et Produit final
+                Gestion de stock - Matière première, Produit semi-prêt et Produit final
               </p>
             </div>
           </div>
@@ -71,9 +71,9 @@ export default function Index() {
                         <div className="text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-blue-500">
                           <i className="fas fa-cubes"></i>
                         </div>
-                        <h6 className="text-xl font-semibold">MatiÃ¨re PremiÃ¨re</h6>
+                        <h6 className="text-xl font-semibold">Matière Première</h6>
                         {summary.matierePremieres.length === 0 ? (
-                          <p className="mt-2 mb-4 text-gray-500">Aucune matiÃ¨re en stock</p>
+                          <p className="mt-2 mb-4 text-gray-500">Aucune matière en stock</p>
                         ) : (
                           <div className="mt-2 mb-4">
                             {summary.matierePremieres.map((m) => (
@@ -93,9 +93,9 @@ export default function Index() {
                         <div className="text-white p-3 text-center inline-flex items-center justify-center w-12 h-12 mb-5 shadow-lg rounded-full bg-yellow-500">
                           <i className="fas fa-cogs"></i>
                         </div>
-                        <h6 className="text-xl font-semibold">Produit Semi-PrÃªt</h6>
+                        <h6 className="text-xl font-semibold">Produit Semi-Prêt</h6>
                         {summary.produitsSemiPrets.length === 0 ? (
-                          <p className="mt-2 mb-4 text-gray-500">Aucun produit semi-prÃªt</p>
+                          <p className="mt-2 mb-4 text-gray-500">Aucun produit semi-prêt</p>
                         ) : (
                           <div className="mt-2 mb-4">
                             {summary.produitsSemiPrets.map((s) => (

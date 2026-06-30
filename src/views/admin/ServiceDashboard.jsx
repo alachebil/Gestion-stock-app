@@ -22,7 +22,7 @@ export default function ServiceDashboard() {
   useEffect(() => {
     const fetchStockSummary = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/service-stock/summary");
+        const response = await axios.get("/service-stock/summary");
         const { produitsSemiPrets, produitsFinals } = response.data;
 
         const spTotal = produitsSemiPrets.reduce((sum, s) => sum + s.totalKg, 0);
@@ -41,7 +41,7 @@ export default function ServiceDashboard() {
 
     const fetchTransformations = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/service-stock/transformations");
+        const response = await axios.get("/service-stock/transformations");
         setTransformations(response.data);
       } catch (error) {
         console.error("Error fetching service transformations:", error);
@@ -58,7 +58,7 @@ export default function ServiceDashboard() {
 
   const refreshTransformations = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/service-stock/transformations");
+      const response = await axios.get("/service-stock/transformations");
       setTransformations(response.data);
     } catch (error) {
       console.error("Error fetching service transformations:", error);
@@ -67,7 +67,7 @@ export default function ServiceDashboard() {
 
   const deleteTransformation = async (id) => {
     try {
-      await axios.delete(`http://localhost:3000/service-stock/transformations/${id}`);
+      await axios.delete(`/service-stock/transformations/${id}`);
       await refreshTransformations();
     } catch (error) {
       console.error("Error deleting transformation:", error);
